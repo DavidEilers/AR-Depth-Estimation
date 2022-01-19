@@ -1,0 +1,5 @@
+builddir/*
+.vscode/*
+.vs/*
+subprojects/google*
+subprojects/packagecache*
