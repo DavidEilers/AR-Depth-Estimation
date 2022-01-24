@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/glfw/glfw.git
+revision = 3.3-stable
+
+patch_directory = glfw
+
+[provide]
+dependency_names = glfw_dep

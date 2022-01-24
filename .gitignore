@@ -3,3 +3,4 @@ builddir/*
 .vs/*
 subprojects/google*
 subprojects/packagecache*
+subprojects/SDL2*/
