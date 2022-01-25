@@ -1,12 +1,12 @@
 project('openvr', 'cpp')
 
-system_info = target_machine
+system_info = host_machine
 
 lib_dir =''
 bin_dir =''
 if system_info.system() == 'windows'
-  lib_dir='\\lib\\win'
-  bin_dir='\\bin\\win'
+  lib_dir='/lib/win'
+  bin_dir='/bin/win'
 elif system_info.system() == 'linux'
   lib_dir='/lib/linux'
   bin_dir='/bin/linux'

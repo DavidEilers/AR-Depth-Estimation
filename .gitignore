@@ -4,3 +4,4 @@ builddir/*
 subprojects/google*
 subprojects/packagecache*
 subprojects/SDL2*/
+build*/*

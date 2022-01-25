@@ -5,6 +5,11 @@ This bachlor project is for creating a depth map for AR applications
 ### Requirements
 - compiler for c++ (tested with clang and gcc)
 - meson
+### Requirements WSL
+```
+sudo apt update
+sudo apt install meson clang cmake pkg-config xorg-dev mingw-w64 mingw-w64-tools
+```
 ### How to build
 ```
 meson builddir
