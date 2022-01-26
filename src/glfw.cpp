@@ -6,6 +6,9 @@
  
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+
+#include "shader.hpp"
  
 static const struct
 {
@@ -50,7 +53,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 }
  
 int main(void)
-{
+{   
+
+    std::cerr << "Trying to get output at all!"<< std::endl;
+    fprintf(stderr,"Trying to get output at all\n");
+    fflush(stderr);
+    //puts("Trying to get Text output!");
     GLFWwindow* window;
     GLuint vertex_buffer, vertex_shader, fragment_shader, program;
     GLint mvp_location, vpos_location, vcol_location;
@@ -59,13 +67,16 @@ int main(void)
  
     if (!glfwInit())
         exit(EXIT_FAILURE);
- 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+
+    
+    puts("Trying to get OpenGL Context!");
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
  
     window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
     if (!window)
     {
+        puts("Failed to create Window or OpenGL Context!");
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
@@ -74,6 +85,7 @@ int main(void)
  
     glfwMakeContextCurrent(window);
     gladLoadGL(glfwGetProcAddress);
+    printf("Got OpenGL Version: %s",glfwGetVersionString());
     glfwSwapInterval(1);
  
     // NOTE: OpenGL error checks have been omitted for brevity
@@ -81,7 +93,7 @@ int main(void)
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
- 
+ /*
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
     glCompileShader(vertex_shader);
@@ -94,7 +106,17 @@ int main(void)
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
- 
+   */     
+    std::string shader_dir("assets\\shader\\");
+    std::cout << "testing Path" << std::endl;
+    std::string vertex_shader_path(shader_dir+"example.vert.glsl");
+    std::string fragment_shader_path(shader_dir+"example.frag.glsl");
+    std::cout << vertex_shader_path << std::endl << fragment_shader_path << std::endl;
+    Shader myShader{vertex_shader_path, fragment_shader_path};
+    vertex_shader = myShader.m_vertex_shader_id;
+    fragment_shader = myShader.m_fragment_shader_id;
+    program = myShader.m_program_id;
+
     mvp_location = glGetUniformLocation(program, "MVP");
     vpos_location = glGetAttribLocation(program, "vPos");
     vcol_location = glGetAttribLocation(program, "vCol");

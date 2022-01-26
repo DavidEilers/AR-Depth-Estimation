@@ -13,7 +13,9 @@ sources = ['internal.h',
            'input.c',
            'monitor.c',
            'vulkan.c',
-           'window.c']
+           'window.c',
+           '../deps/glad_gl.c'
+           ]
 
 if host_system == 'linux' or host_system == 'bsd'
     dependencies += [rt_dep, math_dep, cc.find_library('dl', required: false)]
@@ -256,6 +258,7 @@ endif
 #--------------------------------------------------------------------
 # Declare library and its dependency object
 #--------------------------------------------------------------------
+
 
 glfw_library = library('glfw',
                        sources,

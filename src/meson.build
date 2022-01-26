@@ -33,7 +33,7 @@ src = []
 main_src = src + ['main.cpp']
 main_exe = executable('main', main_src, include_directories: include_dirs, link_args:['-static-libgcc', '-static-libstdc++'])
 #glad_dep = library('glad','external/gl.c',include_directories:include_directories('external/include'), dependencies: [opengl_dep,dl_dep])
-glfw_exe = executable('glfw', ['glfw.cpp'], win_subsystem:'windows', dependencies: [glfw_dep,opengl_dep,dl_dep,glad_dep], link_args:['-static-libgcc', '-static-libstdc++'])
+glfw_exe = executable('glfw', ['glfw.cpp'], link_args:['-static-libgcc', '-static-libstdc++','-lstdc++fs'], dependencies: [glfw_dep,opengl_dep,dl_dep])#, win_subsystem:'windows', dependencies: [glfw_dep,opengl_dep,dl_dep], link_args:['-static-libgcc', '-static-libstdc++'])
 
 
 ##### testing part #####
