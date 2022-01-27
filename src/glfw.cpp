@@ -51,6 +51,20 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
+
+void GLAPIENTRY
+MessageCallback( GLenum source,
+                 GLenum type,
+                 GLuint id,
+                 GLenum severity,
+                 GLsizei length,
+                 const GLchar* message,
+                 const void* userParam )
+{
+  fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+           ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
+            type, severity, message );
+}
  
 int main(void)
 {   
@@ -60,7 +74,7 @@ int main(void)
     fflush(stderr);
     //puts("Trying to get Text output!");
     GLFWwindow* window;
-    GLuint vertex_buffer, vertex_shader, fragment_shader, program;
+    GLuint vertex_buffer, vertex_shader, fragment_shader, program, vertex_array_object;
     GLint mvp_location, vpos_location, vcol_location;
  
     glfwSetErrorCallback(error_callback);
@@ -70,8 +84,9 @@ int main(void)
 
     
     puts("Trying to get OpenGL Context!");
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
  
     window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
     if (!window)
@@ -85,11 +100,16 @@ int main(void)
  
     glfwMakeContextCurrent(window);
     gladLoadGL(glfwGetProcAddress);
-    printf("Got OpenGL Version: %s",glfwGetVersionString());
-    glfwSwapInterval(1);
+    printf("GLFW Version: %s\n",glfwGetVersionString());
+    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+    glfwSwapInterval(1);    
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
  
     // NOTE: OpenGL error checks have been omitted for brevity
  
+    glGenVertexArrays(1,&vertex_array_object);
+    glBindVertexArray(vertex_array_object);
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -120,13 +140,19 @@ int main(void)
     mvp_location = glGetUniformLocation(program, "MVP");
     vpos_location = glGetAttribLocation(program, "vPos");
     vcol_location = glGetAttribLocation(program, "vCol");
- 
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
+
+    if(mvp_location == -1 || vpos_location == -1 || vcol_location == -1){
+        printf("Some uniform location was not found!: %d %d %d\n", mvp_location, vpos_location, vcol_location);
+    } 
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE,
                           sizeof(vertices[0]), (void*) 0);
-    glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
                           sizeof(vertices[0]), (void*) (sizeof(float) * 2));
+
+    glClearColor(0.5f,0.5f,0.5,1.0);
+
  
     while (!glfwWindowShouldClose(window))
     {

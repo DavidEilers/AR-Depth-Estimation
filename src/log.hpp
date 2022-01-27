@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 
+#define WARN_LOG_ENABLED
 
 #ifdef WARN_LOG_ENABLED
 inline void warn_log(const char * str){

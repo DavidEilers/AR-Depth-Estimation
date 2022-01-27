@@ -15,9 +15,6 @@ if host_machine.system() == 'windows'
  run_command(copy_cmd,openvr_dll_dir+'/openvr_api.dll',meson.current_build_dir()+'/openvr_api.dll', check: true)
 endif
 
-### Get the neccessary dependencies for glad
-glad_proj = subproject('glad')
-glad_dep = glad_proj.get_variable('glad_dep')
 
 dl_dep = cc.find_library('dl', required: false)
 
