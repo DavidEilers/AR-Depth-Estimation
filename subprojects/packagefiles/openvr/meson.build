@@ -20,8 +20,11 @@ elif system_info.cpu_family() == 'x86_64'
   bin_dir+='64'
 endif
   
-cc = meson.get_compiler('cpp')
+cc = meson.get_compiler('cpp', native: false)
 
-openvr_dep = cc.find_library('openvr_api', dirs : meson.current_source_dir()+lib_dir)
+openvr_lib = cc.find_library('openvr_api', dirs : meson.current_source_dir()+bin_dir, include_directories: [include_directories('headers')])
+openvr_dep = declare_dependency(dependencies: openvr_lib,
+                              include_directories:
+                                    [include_directories('headers')])
 openvr_inc = include_directories('headers')
 openvr_bin_dir = meson.current_source_dir()+bin_dir
