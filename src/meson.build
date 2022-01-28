@@ -34,8 +34,9 @@ main_exe = executable('main', main_src, include_directories: include_dirs, link_
 ### Get the necessary dependencvies for Google Test 
 gtest_proj = subproject('gtest')
 gtest_dep = gtest_proj.get_variable('gtest_dep')
+gmock_dep = gtest_proj.get_variable('gmock_dep')
 
-test_dependencies = [gtest_dep, openvr_dep, glfw_dep, dl_dep, opengl_dep]
+test_dependencies = [gtest_dep, gmock_dep, openvr_dep, glfw_dep, dl_dep, opengl_dep]
 
 ### List all test-files in a array and create a seperate Meson test for every test-file
 test_src = src + ['image_test.cpp','init_vr_test.cpp','glfw_test.cpp']
