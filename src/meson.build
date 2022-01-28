@@ -1,10 +1,12 @@
 include_dirs = []
+dependencies = []
 
 cc = meson.get_compiler('cpp', native: false)
 
 ### Get the neccessary dependencies for OpenVR
 openvr_proj = subproject('openvr')
 openvr_dep  = openvr_proj.get_variable('openvr_dep')
+dependencies += [openvr_dep]
 
 ## Workaround on Windows to copy openvr_api.dll, because it won't link with meson dependencies 
 if host_machine.system() == 'windows'
@@ -15,18 +17,21 @@ endif
 
 
 dl_dep = cc.find_library('dl', required: false)
+dependencies += [dl_dep]
 
 ### Get the neccessary dependencies for GLFW
 glfw_proj = subproject('glfw')
 glfw_dep = glfw_proj.get_variable('glfw_dep')
+dependencies += [glfw_dep]
 
 ### Get the neccessary dependencies for OpenGL
 opengl_dep = dependency('gl',required:true)
+dependencies += [opengl_dep]
 
 ##### main program #####
 src = []
 main_src = src + ['main.cpp']
-main_exe = executable('main', main_src, include_directories: include_dirs, link_args:['-static-libgcc', '-static-libstdc++'])
+main_exe = executable('main', main_src, dependencies: [dependencies], link_args:['-static-libgcc', '-static-libstdc++'])
 
 
 ##### testing part #####
@@ -36,7 +41,7 @@ gtest_proj = subproject('gtest')
 gtest_dep = gtest_proj.get_variable('gtest_dep')
 gmock_dep = gtest_proj.get_variable('gmock_dep')
 
-test_dependencies = [gtest_dep, gmock_dep, openvr_dep, glfw_dep, dl_dep, opengl_dep]
+test_dependencies = dependencies + [gtest_dep, gmock_dep]
 
 ### List all test-files in a array and create a seperate Meson test for every test-file
 test_src = src + ['image_test.cpp','init_vr_test.cpp','glfw_test.cpp']
