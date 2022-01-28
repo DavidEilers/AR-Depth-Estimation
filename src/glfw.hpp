@@ -1,20 +1,22 @@
+#pragma once
 #include "glad/gl.h"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include "linmath.h"
 
-#include <iostream>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "shader.hpp"
+#include "log.hpp"
 
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
                                 const GLchar *message, const void *userParam)
 {
-    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
+    logger_warn << "GL CALLBACK:" << (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "") 
+                << "type = 0x" << type 
+                << ", severity = 0x" << severity 
+                << ", message = " << message;
 }
 
 class ContextManager
@@ -31,7 +33,7 @@ class ContextManager
 
     static void error_callback(int error, const char *description)
     {
-        fprintf(stderr, "Error: %s\n", description);
+        logger_error << description;
     }
 
     static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -42,11 +44,6 @@ class ContextManager
 
     ContextManager()
     {
-
-        std::cerr << "Trying to get output at all!" << std::endl;
-        fprintf(stderr, "Trying to get output at all\n");
-        fflush(stderr);
-        // puts("Trying to get Text output!");
         GLFWwindow *window;
         GLuint vertex_buffer, vertex_shader, fragment_shader, program, vertex_array_object;
         GLint mvp_location, vpos_location, vcol_location;
@@ -56,7 +53,6 @@ class ContextManager
         if (!glfwInit())
             exit(EXIT_FAILURE);
 
-        puts("Trying to get OpenGL Context!");
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -64,7 +60,7 @@ class ContextManager
         window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
         if (!window)
         {
-            puts("Failed to create Window or OpenGL Context!");
+            logger_error << "Failed to create Window or OpenGL Context!";
             glfwTerminate();
             exit(EXIT_FAILURE);
         }
@@ -73,11 +69,14 @@ class ContextManager
 
         glfwMakeContextCurrent(window);
         gladLoadGL(glfwGetProcAddress);
-        printf("GLFW Version: %s\n", glfwGetVersionString());
-        printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+        logger_info << "GLFW Version: " << glfwGetVersionString();
+        logger_info << "OpenGL Version: " << glGetString(GL_VERSION);
         glfwSwapInterval(1);
+
+        #ifdef DEBUG_GL
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(MessageCallback, 0);
+        #endif
 
         // NOTE: OpenGL error checks have been omitted for brevity
 
@@ -101,10 +100,8 @@ class ContextManager
            glLinkProgram(program);
           */
         std::string shader_dir("assets\\shader\\");
-        std::cout << "testing Path" << std::endl;
         std::string vertex_shader_path(shader_dir + "example.vert.glsl");
         std::string fragment_shader_path(shader_dir + "example.frag.glsl");
-        std::cout << vertex_shader_path << std::endl << fragment_shader_path << std::endl;
         Shader myShader{vertex_shader_path, fragment_shader_path};
         vertex_shader = myShader.m_vertex_shader_id;
         fragment_shader = myShader.m_fragment_shader_id;
@@ -116,7 +113,7 @@ class ContextManager
 
         if (mvp_location == -1 || vpos_location == -1 || vcol_location == -1)
         {
-            printf("Some uniform location was not found!: %d %d %d\n", mvp_location, vpos_location, vcol_location);
+            logger_warn << "Some uniform location was not found!";
         }
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void *)0);
