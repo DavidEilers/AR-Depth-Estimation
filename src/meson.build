@@ -39,7 +39,7 @@ copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_b
 ##### main program #####
 src = []
 main_src = src + ['main.cpp']
-main_exe = executable('main', main_src, dependencies: [dependencies], link_args:['-static-libgcc', '-static-libstdc++'])
+main_exe = executable('main', main_src, dependencies: [dependencies], link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
 
 
 ##### testing part #####

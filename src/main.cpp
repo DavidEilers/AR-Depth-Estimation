@@ -1,4 +1,4 @@
-#include <application.hpp>
+#include <application_image.hpp>
 #define PROJECT_NAME "arDepthEstimation"
 
 int main(int argc, char **argv)
