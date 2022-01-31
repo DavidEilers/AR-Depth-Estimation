@@ -1,5 +1,8 @@
 #pragma once
 #include "glfw.hpp"
+extern "C"{
+#include "stb_image.h"
+}
 
 class MainApplication : public Application{
 

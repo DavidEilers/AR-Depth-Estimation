@@ -8,3 +8,4 @@ The projects include their respective LICENSE.md in their folder
 - GLFW-meson code in subprojects/packagefiles/glfw See [Notice](subprojects/packagefiles/glfw/NOTICE.md)
 - Google Test see subprojects/google-test
 - OpenVR see subprojects/openvr
+- STB under subprojects/stb

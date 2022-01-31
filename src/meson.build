@@ -28,6 +28,11 @@ dependencies += [glfw_dep]
 opengl_dep = dependency('gl',required:true)
 dependencies += [opengl_dep]
 
+### Get the neccessary dependencies for STB
+stb_proj = subproject('stb')
+stb_dep = stb_proj.get_variable('stb_dep')
+dependencies += [stb_dep]
+
 ### Create symlink for assets folder
 copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_build_dir()+'/assets', check: true)
 
