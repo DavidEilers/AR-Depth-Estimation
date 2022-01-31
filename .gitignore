@@ -5,3 +5,4 @@ subprojects/google*
 subprojects/packagecache*
 subprojects/SDL2*/
 build*/*
+assets/test_data/*

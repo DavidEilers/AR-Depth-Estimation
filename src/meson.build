@@ -28,6 +28,9 @@ dependencies += [glfw_dep]
 opengl_dep = dependency('gl',required:true)
 dependencies += [opengl_dep]
 
+### Create symlink for assets folder
+copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_build_dir()+'/assets', check: true)
+
 ##### main program #####
 src = []
 main_src = src + ['main.cpp']
