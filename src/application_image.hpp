@@ -7,6 +7,8 @@ extern "C"{
 
 #include <cstddef>
 
+#include "texture.hpp"
+
 class MainApplication : public Application{
 
  
@@ -22,8 +24,9 @@ class MainApplication : public Application{
     //  lower left   lower right   upper right
         {-1, 1},     {1, 1},       {1, -1}
     };
-    GLuint vertex_buffer, vertex_shader, fragment_shader, program, vertex_array_object;
-    GLuint image_sampler, image_id;
+    GLuint vertex_buffer, vertex_array_object;
+    arDepthEstimation::Texture<std::byte>* texture;
+    arDepthEstimation::LinearSampler sampler{};
 
 
     public:
@@ -33,7 +36,6 @@ class MainApplication : public Application{
     }
 
     void setup(){
-        
         #ifdef DEBUG_GL
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(MessageCallback, 0);
@@ -55,20 +57,6 @@ class MainApplication : public Application{
         std::string vertex_shader_path(shader_dir + "screen_quad.vert.glsl");
         std::string fragment_shader_path(shader_dir + "screen_quad.frag.glsl");
         Shader myShader{vertex_shader_path, fragment_shader_path};
-        vertex_shader = myShader.m_vertex_shader_id;
-        fragment_shader = myShader.m_fragment_shader_id;
-        program = myShader.m_program_id;
-
-        glGenSamplers(1,&image_sampler);
-        glSamplerParameteri(image_sampler,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glSamplerParameteri(image_sampler,GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glSamplerParameteri(image_sampler,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glSamplerParameteri(image_sampler,GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glSamplerParameteri(image_sampler,GL_TEXTURE_MAX_LEVEL, 0);
-
-        glGenTextures(1,&image_id);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, image_id);
 
         int width, height, channels;
         std::byte *image_data =(std::byte*) stbi_load("assets\\test_data\\Adirondack-perfect\\im0.png", &width, &height, &channels, 4);
@@ -76,9 +64,9 @@ class MainApplication : public Application{
             logger_error << "couldn't load image!";
             std::runtime_error("couldn't load image!");
         }
-
-        glBindSampler(0, image_sampler);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+        
+        sampler.initialize_sampler();
+        texture = new arDepthEstimation::Texture<std::byte>{width,height,GL_RGBA8,GL_UNSIGNED_BYTE,image_data,&sampler,0};
         stbi_image_free(image_data);
 
     }
@@ -88,10 +76,10 @@ class MainApplication : public Application{
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(program);
+        glUseProgram(myShader.m_program_id);
        
-        glBindSampler(GL_TEXTURE0, image_sampler);
-        glBindTexture(GL_TEXTURE_2D, image_id);
+        texture->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        texture->unbind();
     }
 };
