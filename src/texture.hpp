@@ -10,7 +10,7 @@
 namespace arDepthEstimation
 {
 
-template <typename Pixel> class Texture
+class Texture
 {
     GLuint m_texture_id;
     const size_t m_width;
@@ -33,7 +33,7 @@ template <typename Pixel> class Texture
         m_sampler->unbind(m_sampler_position);
     }
 
-    void upload_texture(Pixel *data)
+    void upload_texture(void *data)
     {
         bind();
         glTextureSubImage2D(m_texture_id,
@@ -56,7 +56,7 @@ template <typename Pixel> class Texture
      * @param data_type_ data_type_ of the sub-pixel
      * @cond data must point to width_*height_*sizeof(pixel) readable memory space
      */
-    Texture(size_t width_, size_t height_, GLenum pixel_format_, GLenum data_type_, Pixel *data, ISampler *sampler_,
+    Texture(size_t width_, size_t height_, GLenum pixel_format_, GLenum data_type_, void *data, ISampler *sampler_,
             GLint sampler_position_)
         : m_width{width_}, m_height{height_}, m_pixel_format{pixel_format_},
           m_data_type{data_type_}, m_sampler{sampler_}, m_sampler_position{sampler_position_}

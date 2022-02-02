@@ -8,6 +8,7 @@ extern "C"{
 #include <cstddef>
 
 #include "texture.hpp"
+#include "init_vr.hpp"
 
 class MainApplication : public Application{
 
@@ -25,9 +26,8 @@ class MainApplication : public Application{
         {-1, 1},     {1, 1},       {1, -1}
     };
     GLuint vertex_buffer, vertex_array_object;
-    arDepthEstimation::Texture* texture;
-    arDepthEstimation::LinearSampler sampler{};
     Shader* myShader;
+    arDepthEstimation::Vr* vr;
 
 
     public:
@@ -60,16 +60,7 @@ class MainApplication : public Application{
         //Shader myShader{vertex_shader_path, fragment_shader_path};
         myShader =  new Shader{vertex_shader_path, fragment_shader_path};
 
-        int width, height, channels;
-        std::byte *image_data =(std::byte*) stbi_load("assets\\test_data\\Adirondack-perfect\\im0.png", &width, &height, &channels, 4);
-        if(image_data == nullptr || channels < 3 || channels > 4){
-            logger_error << "couldn't load image!";
-            std::runtime_error("couldn't load image!");
-        }
-        
-        sampler.initialize_sampler();
-        texture = new arDepthEstimation::Texture{width,height,GL_RGBA8,GL_UNSIGNED_BYTE,image_data,&sampler,0};
-        stbi_image_free(image_data);
+        vr = new arDepthEstimation::Vr{};
 
     }
 
@@ -78,10 +69,17 @@ class MainApplication : public Application{
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        vr->update_texture();
+
         glUseProgram(myShader->m_program_id);
        
-        texture->bind();
+        vr->texture->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        texture->unbind();
+        vr->texture->unbind();
+    }
+
+    ~MainApplication(){
+        delete vr;
+        delete myShader;
     }
 };

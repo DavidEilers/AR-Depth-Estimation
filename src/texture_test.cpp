@@ -16,7 +16,7 @@ class TextureTestApp : public Application{
     void setup(){
         arDepthEstimation::LinearSampler sampler{};
         uint8_t pixel_data[] =  {255,0,0,255};
-        arDepthEstimation::Texture<uint8_t> *  texture = new arDepthEstimation::Texture<uint8_t>{1,1,
+        arDepthEstimation::Texture*  texture = new arDepthEstimation::Texture{1,1,
                                             GL_RGBA8,GL_UNSIGNED_BYTE,pixel_data,&sampler,0};
         GLint buffer_id;
 

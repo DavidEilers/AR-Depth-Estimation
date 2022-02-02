@@ -2,7 +2,7 @@
 
 #include "init_vr.hpp"
 #include "gtest/gtest.h"
-
+/*
 TEST(InitVRTest, creation_deletion)
 {
     try
@@ -13,4 +13,4 @@ TEST(InitVRTest, creation_deletion)
     {
         FAIL();
     }
-}
+}*/
