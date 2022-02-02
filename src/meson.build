@@ -52,13 +52,13 @@ gmock_dep = gtest_proj.get_variable('gmock_dep')
 test_dependencies = dependencies + [gtest_dep, gmock_dep]
 
 ### List all test-files in a array and create a seperate Meson test for every test-file
-test_src = src + ['image_test.cpp','init_vr_test.cpp','glfw_test.cpp']
+test_src = src + ['image_test.cpp','init_vr_test.cpp','glfw_test.cpp','texture_test.cpp']
 foreach single_test : test_src
-    temp_exe = executable(single_test.strip('.cpp'),[single_test]+['test_main.cpp'], dependencies:test_dependencies, link_args:['-static-libgcc', '-static-libstdc++'])
+    temp_exe = executable(single_test.strip('.cpp'),[single_test]+['test_main.cpp'], dependencies:test_dependencies, link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
     test(single_test.strip('_test.cpp'),temp_exe)
 endforeach
 
 ### Create a Test which includes all other tests
 test_src += 'test_main.cpp'
-test_exe = executable('all_tests',test_src, dependencies:test_dependencies, link_args:['-static-libgcc', '-static-libstdc++'])
-test('all_tests', test_exe)
+#test_exe = executable('all_tests',test_src, dependencies:test_dependencies, link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
+#test('all_tests', test_exe)

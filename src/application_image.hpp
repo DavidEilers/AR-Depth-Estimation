@@ -27,6 +27,7 @@ class MainApplication : public Application{
     GLuint vertex_buffer, vertex_array_object;
     arDepthEstimation::Texture<std::byte>* texture;
     arDepthEstimation::LinearSampler sampler{};
+    Shader* myShader;
 
 
     public:
@@ -56,7 +57,8 @@ class MainApplication : public Application{
         std::string shader_dir("assets\\shader\\");
         std::string vertex_shader_path(shader_dir + "screen_quad.vert.glsl");
         std::string fragment_shader_path(shader_dir + "screen_quad.frag.glsl");
-        Shader myShader{vertex_shader_path, fragment_shader_path};
+        //Shader myShader{vertex_shader_path, fragment_shader_path};
+        myShader =  new Shader{vertex_shader_path, fragment_shader_path};
 
         int width, height, channels;
         std::byte *image_data =(std::byte*) stbi_load("assets\\test_data\\Adirondack-perfect\\im0.png", &width, &height, &channels, 4);
@@ -76,7 +78,7 @@ class MainApplication : public Application{
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(myShader.m_program_id);
+        glUseProgram(myShader->m_program_id);
        
         texture->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
