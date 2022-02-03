@@ -66,16 +66,28 @@ class MainApplication : public Application{
 
     void draw(int width, int height){
 
-        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
         vr->update_texture();
 
         glUseProgram(myShader->m_program_id);
        
-        vr->texture->bind();
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        vr->texture->unbind();
+        vr->bind_left_eye();
+            vr->texture->bind();
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            vr->texture->unbind();
+            //vr->submit_frames();
+        vr->bind_right_eye();
+            vr->texture->bind();
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            vr->texture->unbind();
+            //vr->submit_frames();
+        vr->bind_window();
+            glViewport(0, 0, width, height);
+            vr->texture->bind();
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            vr->texture->unbind();
+        vr->submit_frames();
     }
 
     ~MainApplication(){
