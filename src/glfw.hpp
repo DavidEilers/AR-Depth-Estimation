@@ -58,7 +58,12 @@ class ContextManager
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+        #define DEBUG_GL
+        #ifdef DEBUG_GL
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+        #endif
+
+        window = glfwCreateWindow(800, 600, "Simple example", NULL, NULL);
         if (!window)
         {
             logger_error << "Failed to create Window or OpenGL Context!";

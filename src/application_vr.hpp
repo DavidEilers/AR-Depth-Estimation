@@ -28,6 +28,7 @@ class MainApplication : public Application{
     GLuint vertex_buffer, vertex_array_object;
     Shader* myShader;
     arDepthEstimation::Vr* vr;
+    GLuint offset_loc;
 
 
     public:
@@ -37,9 +38,12 @@ class MainApplication : public Application{
     }
 
     void setup(){
+        #define DEBUG_GL
         #ifdef DEBUG_GL
         glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
         glDebugMessageCallback(MessageCallback, 0);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
         #endif
 
         glGenVertexArrays(1, &vertex_array_object);
@@ -57,8 +61,10 @@ class MainApplication : public Application{
         std::string shader_dir("assets\\shader\\");
         std::string vertex_shader_path(shader_dir + "screen_quad.vert.glsl");
         std::string fragment_shader_path(shader_dir + "screen_quad.frag.glsl");
-        //Shader myShader{vertex_shader_path, fragment_shader_path};
+
         myShader =  new Shader{vertex_shader_path, fragment_shader_path};
+
+        offset_loc = glGetUniformLocation(myShader->m_program_id,"offset");
 
         vr = new arDepthEstimation::Vr{};
 
@@ -66,28 +72,63 @@ class MainApplication : public Application{
 
     void draw(int width, int height){
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        logger_info << "draw frame start";
 
-        vr->update_texture();
+        vr->start_frame();
+        
+        logger_info << "update texture start";
+        vr->update_texture();        
+        logger_info << "update texture finished";
 
         glUseProgram(myShader->m_program_id);
+        
+        vr->texture->bind();
+        glEnable(GL_MULTISAMPLE);
+
+        
+        logger_info << "left eye rendering start";
        
         vr->bind_left_eye();
-            vr->texture->bind();
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            glUniform1f(offset_loc,0.0);
             glDrawArrays(GL_TRIANGLES, 0, 6);
-            vr->texture->unbind();
-            //vr->submit_frames();
+            vr->blit_frame_left();
+        
+        logger_info << "left eye rendering finished";
+
+
+        logger_info << "right eye rendering start";
+
         vr->bind_right_eye();
-            vr->texture->bind();
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+            glUniform1f(offset_loc,0.5);
             glDrawArrays(GL_TRIANGLES, 0, 6);
-            vr->texture->unbind();
-            //vr->submit_frames();
+            vr->blit_frame_right();
+
+        logger_info << "right eye rendering finished";
+
+        logger_info << "window rendering start";
+
         vr->bind_window();
+        glBindTexture(GL_TEXTURE_2D,vr->get_left_framebuffer_texture_id() );
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glViewport(0, 0, width, height);
-            vr->texture->bind();
             glDrawArrays(GL_TRIANGLES, 0, 6);
-            vr->texture->unbind();
+
+        
+        logger_info << "window rendering finished";
+        
+        glDisable(GL_MULTISAMPLE);
+        
+        glFlush();glFinish();
+        vr->texture->unbind();
+
+        logger_info << "vr->submit frames start";
         vr->submit_frames();
+        logger_info << "vr->submit frames finished";
+        glFinish();
+
+        logger_info << "draw frame finished";
     }
 
     ~MainApplication(){

@@ -4,7 +4,7 @@
 
 #define ERROR_LOG_ENABLED
 #define WARN_LOG_ENABLED
-#define INFO_LOG_ENABLED
+//#define INFO_LOG_ENABLED
 
 class Logger{
     const std::string m_prefix;
