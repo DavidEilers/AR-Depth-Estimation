@@ -12,6 +12,8 @@
 //my header
 #include "log.hpp"
 
+namespace arDepthEstimation{
+
 class Shader{
     public:
     std::string m_vertex_shader;
@@ -109,3 +111,4 @@ class Shader{
 
     }
 };
+}

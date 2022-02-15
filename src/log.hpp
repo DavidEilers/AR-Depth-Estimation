@@ -6,6 +6,8 @@
 #define WARN_LOG_ENABLED
 //#define INFO_LOG_ENABLED
 
+namespace arDepthEstimation{
+
 class Logger{
     const std::string m_prefix;
     std::ostream*  m_stream;
@@ -48,4 +50,4 @@ Logger logger_info{"[Info]",(&std::cout), true};
 Logger logger_info{"[Info]",(&std::cout), false};
 #endif
 
-
+}

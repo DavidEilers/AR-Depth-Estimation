@@ -8,7 +8,7 @@
 
 
 
-class TextureTestApp : public Application{
+class TextureTestApp : public arDepthEstimation::Application{
     
     void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods){
 
@@ -50,5 +50,5 @@ class TextureTestApp : public Application{
 TEST(TextureTest, lifeCycle)
 {
     TextureTestApp app;
-    EXPECT_THROW(ContextManager mgr{&app},std::runtime_error);
+    EXPECT_THROW(arDepthEstimation::ContextManager mgr{&app},std::runtime_error);
 }

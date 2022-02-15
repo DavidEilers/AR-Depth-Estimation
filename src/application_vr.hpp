@@ -10,6 +10,8 @@ extern "C"{
 #include "texture.hpp"
 #include "init_vr.hpp"
 
+namespace arDepthEstimation{
+
 class MainApplication : public Application{
 
  
@@ -136,3 +138,4 @@ class MainApplication : public Application{
         delete myShader;
     }
 };
+}

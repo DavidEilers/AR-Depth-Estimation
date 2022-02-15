@@ -9,6 +9,8 @@ extern "C"{
 
 #include "texture.hpp"
 
+namespace arDepthEstimation{
+
 class MainApplication : public Application{
 
  
@@ -85,3 +87,4 @@ class MainApplication : public Application{
         texture->unbind();
     }
 };
+}

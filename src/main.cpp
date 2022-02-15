@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv)
 {
-    MainApplication myApp{};
-    ContextManager{&myApp};
+    arDepthEstimation::MainApplication myApp{};
+    arDepthEstimation::ContextManager{&myApp};
     return 0;
 }

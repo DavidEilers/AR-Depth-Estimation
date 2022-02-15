@@ -4,6 +4,8 @@ extern "C"{
 #include "stb_image.h"
 }
 
+namespace arDepthEstimation{
+
 class MainApplication : public Application{
 
     struct Vertex
@@ -77,3 +79,4 @@ class MainApplication : public Application{
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 };
+}
