@@ -15,5 +15,5 @@ TEST(GLFWTest, simpleProgram)
     TestApp myApp;
     EXPECT_CALL(myApp, setup()).Times(1);
     EXPECT_CALL(myApp, draw(testing::_, testing::_)).Times(AtLeast(1));
-    arDepthEstimation::ContextManager a{&myApp};
+    arDepthEstimation::run_app(&myApp);
 }

@@ -6,6 +6,7 @@
 #include "linmath.h"
 
 #include <stdlib.h>
+#include <memory>
 
 #include "shader.hpp"
 #include "log.hpp"
@@ -41,16 +42,27 @@ class ContextManager
     {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
             glfwSetWindowShouldClose(window, GLFW_TRUE);
-        m_app->key_callback( window, key, scancode, action, mods);
+        //m_app->key_callback( window, key, scancode, action, mods);
     }
 
-    Application* m_app;
+    GLFWwindow *window;
+    int width, height;
 
-    ContextManager(Application *app_): m_app{app_}
+    bool should_window_close(){
+        return glfwWindowShouldClose(window);
+    }
+
+    void update_window(){
+        glfwGetFramebufferSize(window, &width, &height);
+        glfwPollEvents();
+    }
+
+    void swap_buffers(){
+        glfwSwapBuffers(window);
+    }
+
+    ContextManager()
     {
-        GLFWwindow *window;
-
-
         glfwSetErrorCallback(error_callback);
 
         if (!glfwInit())
@@ -81,23 +93,27 @@ class ContextManager
         logger_info << "OpenGL Version: " << glGetString(GL_VERSION);
         glfwSwapInterval(1);
 
-        m_app->setup();
+    }
 
-        while (!glfwWindowShouldClose(window))
-        {
-            int width, height;
-
-            glfwGetFramebufferSize(window, &width, &height);
-            m_app->draw(width, height);
-
-            glfwSwapBuffers(window);
-            glfwPollEvents();
-        }
-
+    ~ContextManager(){
         glfwDestroyWindow(window);
-
         glfwTerminate();
     }
 };
+
+    std::unique_ptr<ContextManager> context = nullptr;
+
+    void run_app(Application * app){
+        context = std::make_unique<ContextManager>();
+
+        app->setup();
+
+        while(context->should_window_close() == false){
+            context->update_window();
+            app->draw(context->width, context->height);
+            context->swap_buffers();
+        }
+        context.reset();
+    }
 
 }

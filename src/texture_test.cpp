@@ -50,5 +50,5 @@ class TextureTestApp : public arDepthEstimation::Application{
 TEST(TextureTest, lifeCycle)
 {
     TextureTestApp app;
-    EXPECT_THROW(arDepthEstimation::ContextManager mgr{&app},std::runtime_error);
+    EXPECT_THROW(arDepthEstimation::run_app(&app),std::runtime_error);
 }
