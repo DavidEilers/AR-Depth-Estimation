@@ -3,6 +3,9 @@
 #include <stdexcept>
 
 #include <openvr.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
 
 #include "texture.hpp"
 #include "framebuffer.hpp"
@@ -27,6 +30,7 @@ class Vr
  
     public:
     arDepthEstimation::Texture * texture;
+    glm::mat4 cam_to_eye_mat[2];
     void init_video_texture(){
         
         m_pVRTrackedCamera->AcquireVideoStreamingService(vr::k_unTrackedDeviceIndex_Hmd, &m_hTrackedCamera);
@@ -95,6 +99,67 @@ class Vr
         vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unTrackedDeviceIndex_Hmd, NULL,0);
         vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet),1);
     }
+    
+    inline glm::mat4 ovr34_to_glm44(vr::HmdMatrix34_t& m) {
+        glm::mat4 result = glm::mat4(
+            m.m[0][0], m.m[1][0], m.m[2][0], 0.0,
+            m.m[0][1], m.m[1][1], m.m[2][1], 0.0,
+            m.m[0][2], m.m[1][2], m.m[2][2], 0.0,
+            m.m[0][3], m.m[1][3], m.m[2][3], 1.0f);
+        return result;
+    }
+
+    inline glm::mat4 ovr44_to_glm44(vr::HmdMatrix44_t& m) {
+        glm::mat4 result = glm::mat4(
+            m.m[0][0], m.m[1][0], m.m[2][0], m.m[3][0],
+            m.m[0][1], m.m[1][1], m.m[2][1], m.m[3][1],
+            m.m[0][2], m.m[1][2], m.m[2][2], m.m[3][2],
+            m.m[0][3], m.m[1][3], m.m[2][3], m.m[3][3]);
+        return result;
+    }
+
+    void update_camera_transform_matrix(){
+
+        logger_info << "get camera projection";
+         vr::HmdMatrix44_t ovr_cameraProjection[2];
+         m_pVRTrackedCamera->GetCameraProjection(vr::k_unTrackedDeviceIndex_Hmd,vr::Eye_Left,vr::VRTrackedCameraFrameType_Undistorted,-1,1,&(ovr_cameraProjection[0]));
+         m_pVRTrackedCamera->GetCameraProjection(vr::k_unTrackedDeviceIndex_Hmd,vr::Eye_Right,vr::VRTrackedCameraFrameType_Undistorted,-1,1,&(ovr_cameraProjection[1]));
+         glm::mat4 camera_projection[2];
+         camera_projection[0]= ovr44_to_glm44(ovr_cameraProjection[0]);
+         camera_projection[0]= ovr44_to_glm44(ovr_cameraProjection[1]);
+
+        logger_info << "get camera to head";         
+         vr::HmdMatrix34_t ovr_camera_to_head_mat[2];
+         vr::VRSystem()->GetArrayTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd,vr::Prop_CameraToHeadTransform_Matrix34, vr::k_unHmdMatrix44PropertyTag, &ovr_camera_to_head_mat,sizeof(ovr_camera_to_head_mat));
+         glm::mat4 camera_to_head_mat[2];
+         camera_to_head_mat[0]= ovr34_to_glm44(ovr_camera_to_head_mat[0]);
+         camera_to_head_mat[0]= ovr34_to_glm44(ovr_camera_to_head_mat[1]);
+
+        
+        logger_info << "get eye projection matrix";    
+         vr::HmdMatrix44_t ovr_eye_proj[2];
+
+         
+        typedef void (vr::IVRSystem::*fn_ptr)(vr::HmdMatrix44_t*, vr::EVREye, float, float);
+        fn_ptr get_projection_matrix = reinterpret_cast<fn_ptr>(&vr::IVRSystem::GetProjectionMatrix);
+        (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[0]),vr::Eye_Left,0.1,1);
+        (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[1]),vr::Eye_Left,0.1,1);
+        logger_info << "convert to glm mat4";
+         glm::mat4 eye_proj[2];
+         eye_proj[0]= ovr44_to_glm44(ovr_eye_proj[0]);
+         eye_proj[0]= ovr44_to_glm44(ovr_eye_proj[1]);
+
+        logger_info << "calc camera to eye matrix";
+
+        cam_to_eye_mat[0] = camera_projection[0]*camera_to_head_mat[0]*eye_proj[0];
+        cam_to_eye_mat[1] = camera_projection[1]*camera_to_head_mat[1]*eye_proj[1];
+
+        logger_info << "finished update camera transform matrix";
+
+
+    }
+
+
 
     void bind_left_eye(){
         m_left_eye_framebuffer->bind();

@@ -33,6 +33,11 @@ stb_proj = subproject('stb')
 stb_dep = stb_proj.get_variable('stb_dep')
 dependencies += [stb_dep]
 
+### Get the neccessary dependencies for GLM
+glm_proj = subproject('glm')
+glm_dep = glm_proj.get_variable('glm_dep')
+dependencies += [glm_dep]
+
 ### Create symlink for assets folder
 copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_build_dir()+'/assets', check: true)
 

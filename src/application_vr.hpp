@@ -31,7 +31,9 @@ class MainApplication : public Application{
     GLuint vertex_buffer, vertex_array_object;
     Shader* myShader;
     GLuint offset_loc;
+    GLuint transform_loc;
     arDepthEstimation::Vr* vr;
+    glm::mat4 identity_mat{1.0f};
 
 
     public:
@@ -68,6 +70,7 @@ class MainApplication : public Application{
         myShader =  new Shader{vertex_shader_path, fragment_shader_path};
 
         offset_loc = glGetUniformLocation(myShader->m_program_id,"offset");
+        transform_loc = glGetUniformLocation(myShader->m_program_id,"transform");
 
         vr = new Vr{};
 
@@ -84,6 +87,7 @@ class MainApplication : public Application{
         vr->bind_window();
         glBindTexture(GL_TEXTURE_2D,vr->get_left_framebuffer_texture_id() );
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glViewport(0, 0, width, height);
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -92,6 +96,7 @@ class MainApplication : public Application{
     void inline draw_vr(){ 
         vr->start_frame();
         vr->update_texture();
+        vr->update_camera_transform_matrix();
         glUseProgram(myShader->m_program_id);
         
         vr->texture->bind();
@@ -100,6 +105,7 @@ class MainApplication : public Application{
         vr->bind_left_eye();
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glUniform1f(offset_loc,0.0);
+            glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glDrawArrays(GL_TRIANGLES, 0, 6);
             vr->blit_frame_left();
 
@@ -107,6 +113,7 @@ class MainApplication : public Application{
         vr->bind_right_eye();
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glUniform1f(offset_loc,0.5);
+            glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glDrawArrays(GL_TRIANGLES, 0, 6);
             vr->blit_frame_right();
         

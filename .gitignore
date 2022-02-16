@@ -4,5 +4,6 @@ builddir/*
 subprojects/google*
 subprojects/packagecache*
 subprojects/SDL2*/
+subprojects/glm*/
 build*/*
 assets/test_data/*
