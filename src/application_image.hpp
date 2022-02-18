@@ -8,6 +8,7 @@ extern "C"{
 #include <cstddef>
 
 #include "texture.hpp"
+#include "mesh.hpp"
 
 namespace arDepthEstimation{
 
@@ -30,6 +31,7 @@ class MainApplication : public Application{
     arDepthEstimation::Texture* texture;
     arDepthEstimation::LinearSampler sampler{};
     Shader* myShader;
+    Mesh * cube_mesh;
 
 
     public:
@@ -73,6 +75,12 @@ class MainApplication : public Application{
         texture = new arDepthEstimation::Texture{width,height,GL_RGBA8,GL_UNSIGNED_BYTE,image_data,&sampler,0};
         stbi_image_free(image_data);
 
+        
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        cube_mesh = new Mesh{};
+
     }
 
     void draw(int width, int height){
@@ -81,10 +89,13 @@ class MainApplication : public Application{
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(myShader->m_program_id);
+        glBindVertexArray(vertex_array_object);
        
         texture->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
         texture->unbind();
+        glBindVertexArray(0);
+        cube_mesh->draw();
     }
 };
 }

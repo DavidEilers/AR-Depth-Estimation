@@ -9,6 +9,7 @@ extern "C"{
 
 #include "texture.hpp"
 #include "init_vr.hpp"
+#include "mesh.hpp"
 
 namespace arDepthEstimation{
 
@@ -28,8 +29,9 @@ class MainApplication : public Application{
     //  lower left   lower right   upper right
         {-1, 1},     {1, 1},       {1, -1}
     };
-    GLuint vertex_buffer, vertex_array_object;
+    GLuint vertex_buffer, vao;
     Shader* myShader;
+    Mesh* cubeMesh;
     GLuint offset_loc;
     GLuint transform_loc;
     arDepthEstimation::Vr* vr;
@@ -51,8 +53,8 @@ class MainApplication : public Application{
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
         #endif
 
-        glGenVertexArrays(1, &vertex_array_object);
-        glBindVertexArray(vertex_array_object);
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
         glGenBuffers(1, &vertex_buffer);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -60,6 +62,8 @@ class MainApplication : public Application{
     
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void *)0);
+        glBindBuffer(GL_ARRAY_BUFFER,0);
+        glBindVertexArray(0);
 
         glClearColor(0.5f, 0.5f, 0.5, 1.0);
 
@@ -73,6 +77,7 @@ class MainApplication : public Application{
         transform_loc = glGetUniformLocation(myShader->m_program_id,"transform");
 
         vr = new Vr{};
+        cubeMesh = new Mesh{};
 
     }
 
@@ -85,36 +90,48 @@ class MainApplication : public Application{
 
     void inline draw_window(int width, int height){
         vr->bind_window();
+        glUseProgram(myShader->m_program_id);
+        glBindVertexArray(vao);
         glBindTexture(GL_TEXTURE_2D,vr->get_left_framebuffer_texture_id() );
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glViewport(0, 0, width, height);
             glDrawArrays(GL_TRIANGLES, 0, 6);
-
+        glBindVertexArray(0);
+        glUseProgram(0);
     }
 
     void inline draw_vr(){ 
         vr->start_frame();
         vr->update_texture();
         vr->update_camera_transform_matrix();
-        glUseProgram(myShader->m_program_id);
         
         vr->texture->bind();
         glEnable(GL_MULTISAMPLE);
        
         vr->bind_left_eye();
+            glUseProgram(myShader->m_program_id);
+            glBindVertexArray(vao);
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glUniform1f(offset_loc,0.0);
             glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindVertexArray(0);
+            glUseProgram(0);
+            cubeMesh->draw();
             vr->blit_frame_left();
 
 
         vr->bind_right_eye();
+            glUseProgram(myShader->m_program_id);
+            glBindVertexArray(vao);
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glUniform1f(offset_loc,0.5);
             glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindVertexArray(0);
+            glUseProgram(0);
+            cubeMesh->draw();
             vr->blit_frame_right();
         
         glDisable(GL_MULTISAMPLE);
