@@ -21,6 +21,10 @@ class Texture
     GLint m_sampler_position;
 
   public:
+
+    GLuint get_texture_id(){
+        return m_texture_id;
+    }
     void bind()
     {
         m_sampler->bind(m_sampler_position);

@@ -46,6 +46,9 @@ src = []
 main_src = src + ['main.cpp']
 main_exe = executable('main', main_src, dependencies: [dependencies], link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
 
+##### main program #####
+depth_estimation_src = src + ['depth_estimation_test.cpp']
+main_exe = executable('depth_estimation_test', depth_estimation_src, dependencies: [dependencies], link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
 
 ##### testing part #####
 
