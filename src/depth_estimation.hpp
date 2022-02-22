@@ -4,6 +4,7 @@
 
 #include "sampler.hpp"
 #include "shader.hpp"
+#include "log.hpp"
 
 namespace arDepthEstimation{
 
@@ -55,6 +56,7 @@ namespace arDepthEstimation{
         Shader* m_shader;
         LinearSampler m_sampler_left_eye{};
         LinearSampler m_sampler_right_eye{};
+        GLuint m_texture_size_loc;
 
         void inline create_shader(){
         std::string shader_dir("assets\\shader\\");
@@ -65,6 +67,10 @@ namespace arDepthEstimation{
 
         m_sampler_left_eye.initialize_sampler();
         m_sampler_right_eye.initialize_sampler();
+
+        m_texture_size_loc = glGetUniformLocation(m_shader->m_program_id,"texture_size");
+
+        logger_info << "texture size Loc = "<< m_texture_size_loc;
 
 
         }
@@ -115,6 +121,7 @@ namespace arDepthEstimation{
 
         void update_depth_map(GLuint left_eye_texture_id, GLuint right_eye_texture_id){
             glUseProgram(m_shader->m_program_id);
+            glUniform2i(m_texture_size_loc, m_image_width, m_image_height);
             glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
             glViewport(0, 0, m_image_width, m_image_height);
             //glClear(GL_COLOR_BUFFER_BIT);
