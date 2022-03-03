@@ -103,7 +103,7 @@ namespace arDepthEstimation{
         public:
 
 
-        DepthEstimator(int width, int height): m_image_width{width}, m_image_height{height}{
+        DepthEstimator(int width, int height): m_image_width{width/2}, m_image_height{height/2}{
             create_framebuffer();
             create_shader();
             create_vao();

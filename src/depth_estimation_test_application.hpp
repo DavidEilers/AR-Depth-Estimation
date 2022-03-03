@@ -62,9 +62,11 @@ class MainApplication : public Application{
 
         std::string shader_dir("assets\\shader\\");
         std::string vertex_shader_path(shader_dir + "screen_quad_simple.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "screen_quad.frag.glsl");
+        std::string fragment_shader_path(shader_dir + "screen_quad_simple.frag.glsl");
         //Shader myShader{vertex_shader_path, fragment_shader_path};
         myShader =  new Shader{vertex_shader_path, fragment_shader_path};
+
+        stbi_set_flip_vertically_on_load(true);
 
         int width, height, channels;
         std::byte *image_data_left =(std::byte*) stbi_load("assets\\test_data\\Adirondack-perfect\\im0.png", &width, &height, &channels, 4);

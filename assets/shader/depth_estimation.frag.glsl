@@ -1,4 +1,4 @@
-#version 330
+#version 430
 
 
 in vec2 image_coord;
@@ -55,8 +55,8 @@ vec4 kernel_filter33(sampler2D sampler_obj, vec2 coord, ivec2 size,float kernel[
     return filter_color;
 }
 
-float luminance_kernel_filter33(sampler2D sampler_obj, vec2 coord, ivec2 size,float kernel[9]){
-    float filter_color = 0.0;
+double luminance_kernel_filter33(sampler2D sampler_obj, vec2 coord, ivec2 size, double kernel[9]){
+    double filter_color = 0.0;
     for(int i=0; i<3; i++){
         for(int j=0; j<3;j++){
             float texel_size_x = 1.0/size.x;
@@ -95,27 +95,27 @@ float luminance_kernel_filter55(sampler2D sampler_obj, vec2 coord, ivec2 size,fl
     return filter_color;
 }
 
-mat2 calc_tensor(sampler2D sampler_obj, vec2 coord, ivec2 size){
-    mat2 tensor = mat2(0.0);
-    float vertical_sobel_kernel[9] = {
+dmat2 calc_tensor(sampler2D sampler_obj, vec2 coord, ivec2 size){
+    dmat2 tensor = mat2(0.0);
+    double vertical_sobel_kernel[9] = {
         1.0, 0.0, -1.0,
         2.0, 0.0, -2.0,
         1.0, 0.0, -1.0
     };
 
-    float horizontal_sobel_kernel[9] = {
+    double horizontal_sobel_kernel[9] = {
          1.0,  2.0,  1.0,
          0.0,  0.0,  0.0,
         -1.0, -2.0, -1.0
     };
-    float x_gradiant = luminance_kernel_filter33(
+    double x_gradiant = luminance_kernel_filter33(
                         left_eye_sampler,
-                        image_coord,
+                        coord,
                         texture_size,
                         vertical_sobel_kernel);
-    float y_gradiant = luminance_kernel_filter33(
+    double y_gradiant = luminance_kernel_filter33(
                         left_eye_sampler,
-                        image_coord,
+                        coord,
                         texture_size,
                         horizontal_sobel_kernel);
     tensor[0][0] = x_gradiant * x_gradiant;
@@ -126,13 +126,50 @@ mat2 calc_tensor(sampler2D sampler_obj, vec2 coord, ivec2 size){
     return tensor;
 }
 
-vec2 eigenvalues(mat2 tensor){
-    float a = tensor[0][0];
-    float b = tensor[1][0];
-    float c = tensor[1][1];
-    float square_root_part = sqrt(a-(2*a*c)+4*b*b+c*c+a+c);
-    return vec2(1/2 + square_root_part, 1/2 - square_root_part);
+dvec2 eigenvalues(dmat2 tensor){
+    double a = tensor[0][0];
+    double b = tensor[1][0];
+    double c = tensor[1][1];
+    double square_root_part = sqrt((a*a)-(2*a*c)+4*b*b+c*c+a+c);
+    return dvec2(1/2 + square_root_part, 1/2 - square_root_part);
 }
+
+dvec2 calc_eigenvalues_from_sampler(sampler2D sampler_obj, vec2 pixel_offset, ivec2 size){ 
+    vec2 texel_size;// = vec2(1.0)/texture_size;
+    texel_size.x = 1.0 / size.x;
+    texel_size.y = 1.0 / size.y;
+    dmat2 tensor= calc_tensor(sampler_obj,image_coord+pixel_offset*texel_size,size);
+    return eigenvalues(tensor);
+}
+
+float mat_dot(mat3 first, mat3 second){
+    return 
+    dot(first[0], second[0]) +
+    dot(first[1], second[1]) +
+    dot(first[2], second[2]);
+}
+
+int maximum(float x, float y){
+    if(x>y){
+        return 0;
+    }
+    return 1;
+}
+
+ivec2 maximum_mat(dmat3 comp){
+    double maximum=comp[0][0];
+    ivec2 indices = ivec2(0,0);
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            if(comp[i][j]>maximum){
+                maximum = comp[i][j];
+                indices = ivec2(i,j);
+            }
+        }
+    }
+    return indices;
+}
+
 
 void main()
 {
@@ -151,14 +188,82 @@ void main()
     //float final_luminace = yuv_original_color.r - filter_color_luminance;
     //vec3 sobel_color = kernel_filter33(left_eye_sampler,image_coord,texture_size,horizontal_sobel_kernel).rgb+kernel_filter33(left_eye_sampler,image_coord,texture_size,vertical_sobel_kernel).rgb;
     //float sobel_luminance = luminance_kernel_filter33(left_eye_sampler,image_coord,texture_size,horizontal_sobel_kernel)+luminance_kernel_filter33(left_eye_sampler,image_coord,texture_size,vertical_sobel_kernel);
-    mat2 tensor = calc_tensor(left_eye_sampler,image_coord,texture_size);
+   
+   /* mat2 tensor = calc_tensor(left_eye_sampler,image_coord,texture_size);
+    vec2 texel_size = vec2(1.0)/texture_size.x;
+    mat2 tensor_offset_minus_x = calc_tensor(left_eye_sampler,image_coord+2*texel_size,texture_size);
     vec2 eigen_values = eigenvalues(tensor);
-    vec3 test = vec3(0.0);
-    float threshold = -0.2;
-    if(eigen_values.x>threshold && eigen_values.y > threshold){
-        test=vec3(1.0f);
+    vec2 eigen_values_offset = eigenvalues(tensor_offset);*/
+    dvec2 eigen_values_00 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(-1,-1),texture_size);
+    dvec2 eigen_values_01 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(0,-1),texture_size);
+    dvec2 eigen_values_02 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(1,-1),texture_size);
+
+    dvec2 eigen_values_10 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(-1,0),texture_size);
+    dvec2 eigen_values_11 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(0,0),texture_size);
+    dvec2 eigen_values_12 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(1,0),texture_size);
+
+    dvec2 eigen_values_20 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(-1,1),texture_size);
+    dvec2 eigen_values_21 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(0,1),texture_size);
+    dvec2 eigen_values_22 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(1,1),texture_size);
+
+    dmat3 min_lambda = dmat3(0.0);
+    min_lambda[0][0] = min(eigen_values_00.x,eigen_values_00.y);
+    min_lambda[0][1] = min(eigen_values_01.x,eigen_values_01.y);
+    min_lambda[0][2] = min(eigen_values_02.x,eigen_values_02.y);
+    min_lambda[1][0] = min(eigen_values_10.x,eigen_values_10.y);
+    min_lambda[1][1] = min(eigen_values_11.x,eigen_values_11.y);
+    min_lambda[1][2] = min(eigen_values_12.x,eigen_values_12.y);
+    min_lambda[2][0] = min(eigen_values_20.x,eigen_values_20.y);
+    min_lambda[2][1] = min(eigen_values_21.x,eigen_values_21.y);
+    min_lambda[2][2] = min(eigen_values_22.x,eigen_values_22.y);
+
+    dmat3 vertical_sobel_kernel = dmat3(
+         1.0,  2.0,  1.0,
+         0.0,  0.0,  0.0,
+        -1.0, -2.0, -1.0
+    );
+
+    dmat3 horizontal_sobel_kernel = dmat3(
+        1.0, 0.0, -1.0,
+        2.0, 0.0, -2.0,
+        1.0, 0.0, -1.0
+    );    
+    
+    dmat3 test_kernel = dmat3(
+        -1.0, -1.0, -1.0,
+        -1.0,  8.0, -1.0,
+        -1.0, -1.0, -1.0
+    );
+
+    /*vec2 gradiant_min_lambda = vec2(
+        mat_dot(horizontal_sobel_kernel,min_lambda),//dot(horizontal_sobel_kernel[0],min_lambda[0])+dot(horizontal_sobel_kernel[1],min_lambda[1])+dot(horizontal_sobel_kernel[2],min_lambda[2]),
+        mat_dot(vertical_sobel_kernel,min_lambda)//dot(vertical_sobel_kernel[0],min_lambda[0])+dot(vertical_sobel_kernel[1],min_lambda[1])+dot(vertical_sobel_kernel[2],min_lambda[2])
+    );*/
+    vec3 test = vec3(1.0);
+
+   /* if(min_lambda[1][1]>min_lambda[0][0] && min_lambda[1][1]>min_lambda[0][1] && min_lambda[1][1]>min_lambda[0][2] && min_lambda[1][1]>min_lambda[1][0] && min_lambda[1][1]>min_lambda[1][2] && min_lambda[1][1]>min_lambda[2][0] && min_lambda[1][1]>min_lambda[2][1] && min_lambda[1][1]>min_lambda[2][2]){
+        test=vec3(0.0);
+    }*/
+    /*
+    if( abs(gradiant_min_lambda.x) == 0.0 && abs(gradiant_min_lambda.y) == 0.0){
+        test = vec3(0.0);
+    }*/
+
+    
+    float threshold = 0.1;
+
+    if(abs(min_lambda[1][1])>threshold){
+        test= vec3(0.0,0.0,0.0);
+     if(maximum_mat(min_lambda)==ivec2(1,1)){
+        test = vec3(0.0,1.0,0.0);
+        }
     }
-    vec3 final_color = test;//vec3(sobel_luminance);//final_luminace*10);
+    
+
+    /*if(min(eigen_values.x,abs(eigen_values.y)) > threshold){
+    }*/
+    //test = vec3(0,eigen_values.y*-1,0.0);
+    vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
     color = vec4(final_color,1.0);
 }
  
