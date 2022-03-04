@@ -42,6 +42,10 @@ vec3 rgb_to_yuv(vec3 rgb_vec ){
     return yuv_vec;
 }
 
+float rgb_to_luminance(vec3 rgb_vec){
+    return dot(rgb_vec,vec3(0.299,0.587,0.144)); //Y channel of YUV color space => See RGB to YUV Color space conversion
+}
+
 vec4 kernel_filter33(sampler2D sampler_obj, vec2 coord, ivec2 size,float kernel[9]){
     vec4 filter_color = vec4(0.0);
     for(int i=0; i<3; i++){
@@ -174,20 +178,11 @@ vec2 get_texel_size(){
     return vec2(1.0)/texture_size;
 }
 
-float sum_of_absolute_differences(sampler2D image_left, sampler2D image_right,vec2 coord, float right_offset, mat3 luminance_left){
-    vec2 texel_size = get_texel_size();
-    vec2 filter_pixel_offset = vec2(-1,-1);
-    vec2 filter_offset = vec2(0,0);
-    float sum = 0;
-    for(int i = 0; i < 3; i++){
-        for(int j = 0; j < 3; j++){
-            filter_pixel_offset = vec2(i-1,j-1);
-            filter_offset = filter_pixel_offset*texel_size;
-            float right = rgb_to_yuv(texture(image_right,coord+vec2(right_offset,0)+filter_offset).rgb).r;
-            sum = sum + abs(luminance_left[i][j]-right);
-        }
-    }
-    return sum;
+float sum_of_absolute_differences(int ring_buff_mid, mat3 ring_buffer_luminance_right, mat3 luminance_left){
+    return
+        dot( abs(luminance_left[0]-ring_buffer_luminance_right[(0+ring_buff_mid)%3]), vec3(1,1,1)) +
+        dot( abs(luminance_left[1]-ring_buffer_luminance_right[(1+ring_buff_mid)%3]), vec3(1,1,1)) +
+        dot( abs(luminance_left[2]-ring_buffer_luminance_right[(2+ring_buff_mid)%3]), vec3(1,1,1));
 }
 
 mat3 luminance_33(sampler2D sampler_obj, vec2 coord){
@@ -205,19 +200,32 @@ mat3 luminance_33(sampler2D sampler_obj, vec2 coord){
     return luminance;
 }
 
+void fill_buff(in out mat3 buff, int row, sampler2D sampler_obj, vec2 pixel_coord){
+    vec2 texel_size = get_texel_size();
+    vec2 coord = pixel_coord*texel_size;
+    buff[row][0] = rgb_to_luminance(texture(sampler_obj,coord+vec2(0,-1)*texel_size).rgb);
+    buff[row][1] = rgb_to_luminance(texture(sampler_obj,coord+vec2(0,0)*texel_size).rgb);
+    buff[row][2] = rgb_to_luminance(texture(sampler_obj,coord+vec2(0,1)*texel_size).rgb);
+}
+
 float calc_disparity(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
     vec2 texel_size = get_texel_size();
-    int x_pos_left = int(coord.x/texel_size.x);
+    vec2 pos_left = coord/texel_size;
     //float result = 100;
-    float x_offset = 0.0;
-    if(x_pos_left + 800 < size.x){
-        size.x = x_pos_left + 800;
+    if(pos_left.x + 800 < size.x){
+        size.x = int(pos_left.x + 800);
     }
-    mat3 luminance = luminance_33(image_left,coord);
-    for(int x_pos_right = x_pos_left; x_pos_right <=size.x; x_pos_right++){
-        x_offset = (x_pos_right-x_pos_left)*texel_size.x;
-        float tmp = sum_of_absolute_differences(image_left, image_right, coord, x_offset, luminance);
+    mat3 luminance_right = luminance_33(image_left,coord);
+    mat3 ring_buffer_texel_fetch;
+    fill_buff(ring_buffer_texel_fetch,0,right_eye_sampler,pos_left+vec2(-1,0));
+    fill_buff(ring_buffer_texel_fetch,1,right_eye_sampler,pos_left+vec2(0,0));
+    int ring_buffer_mid = 1;
+    for(vec2 pos_right = pos_left; pos_right.x <=size.x; pos_right.x++){
+        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
+        float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_right);
+        ring_buffer_mid = int(ring_buffer_mid+1)%3;
         if(tmp<0.1){
+            float x_offset = (pos_right.x-pos_left.x)*texel_size.x;
             return x_offset;
         }
     }
