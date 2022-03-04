@@ -174,7 +174,7 @@ vec2 get_texel_size(){
     return vec2(1.0)/texture_size;
 }
 
-float sum_of_absolute_differences(sampler2D image_left, sampler2D image_right,vec2 coord, float right_offset){
+float sum_of_absolute_differences(sampler2D image_left, sampler2D image_right,vec2 coord, float right_offset, mat3 luminance_left){
     vec2 texel_size = get_texel_size();
     vec2 filter_pixel_offset = vec2(-1,-1);
     vec2 filter_offset = vec2(0,0);
@@ -183,12 +183,26 @@ float sum_of_absolute_differences(sampler2D image_left, sampler2D image_right,ve
         for(int j = 0; j < 3; j++){
             filter_pixel_offset = vec2(i-1,j-1);
             filter_offset = filter_pixel_offset*texel_size;
-            float left = rgb_to_yuv(texture(image_left,coord+filter_offset).rgb).r;
             float right = rgb_to_yuv(texture(image_right,coord+vec2(right_offset,0)+filter_offset).rgb).r;
-            sum = sum + abs(left-right);
+            sum = sum + abs(luminance_left[i][j]-right);
         }
     }
     return sum;
+}
+
+mat3 luminance_33(sampler2D sampler_obj, vec2 coord){
+    vec2 texel_size = get_texel_size();
+    mat3 luminance;
+    vec2 filter_pixel_offset;
+    vec2 filter_offset;
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            filter_pixel_offset = vec2(i-1,j-1);
+            filter_offset = filter_pixel_offset*texel_size;
+            luminance[i][j] = rgb_to_yuv(texture(sampler_obj,coord+filter_offset).rgb).r;
+        }
+    }
+    return luminance;
 }
 
 float calc_disparity(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
@@ -199,9 +213,10 @@ float calc_disparity(sampler2D image_left, sampler2D image_right, vec2 coord, iv
     if(x_pos_left + 800 < size.x){
         size.x = x_pos_left + 800;
     }
+    mat3 luminance = luminance_33(image_left,coord);
     for(int x_pos_right = x_pos_left; x_pos_right <=size.x; x_pos_right++){
         x_offset = (x_pos_right-x_pos_left)*texel_size.x;
-        float tmp = sum_of_absolute_differences(image_left, image_right, coord, x_offset);
+        float tmp = sum_of_absolute_differences(image_left, image_right, coord, x_offset, luminance);
         if(tmp<0.1){
             return x_offset;
         }
