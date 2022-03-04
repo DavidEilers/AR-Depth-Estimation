@@ -170,6 +170,45 @@ ivec2 maximum_mat(dmat3 comp){
     return indices;
 }
 
+vec2 get_texel_size(){
+    return vec2(1.0)/texture_size;
+}
+
+float sum_of_absolute_differences(sampler2D image_left, sampler2D image_right,vec2 coord, float right_offset){
+    vec2 texel_size = get_texel_size();
+    vec2 filter_pixel_offset = vec2(-1,-1);
+    vec2 filter_offset = vec2(0,0);
+    float sum = 0;
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            filter_pixel_offset = vec2(i-1,j-1);
+            filter_offset = filter_pixel_offset*texel_size;
+            float left = rgb_to_yuv(texture(image_left,coord+filter_offset).rgb).r;
+            float right = rgb_to_yuv(texture(image_right,coord+vec2(right_offset,0)+filter_offset).rgb).r;
+            sum = sum + abs(left-right);
+        }
+    }
+    return sum;
+}
+
+float calc_disparity(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
+    vec2 texel_size = get_texel_size();
+    int x_pos_left = int(coord.x/texel_size.x);
+    //float result = 100;
+    float x_offset = 0.0;
+    if(x_pos_left + 800 < size.x){
+        size.x = x_pos_left + 800;
+    }
+    for(int x_pos_right = x_pos_left; x_pos_right <=size.x; x_pos_right++){
+        x_offset = (x_pos_right-x_pos_left)*texel_size.x;
+        float tmp = sum_of_absolute_differences(image_left, image_right, coord, x_offset);
+        if(tmp<0.1){
+            return x_offset;
+        }
+    }
+    return 1.0; //nothing found => maximum disparity
+}
+
 
 void main()
 {
@@ -182,8 +221,8 @@ void main()
     };
 
 
-    vec3 original_color = texture(left_eye_sampler,image_coord).rgb;
-    vec3 yuv_original_color = rgb_to_yuv(original_color);
+    //vec3 original_color = texture(left_eye_sampler,image_coord).rgb;
+    //vec3 yuv_original_color = rgb_to_yuv(original_color);
     //float filter_color_luminance = (1.0)*luminance_kernel_filter55(left_eye_sampler,image_coord,texture_size,gaussian_kernel);
     //float final_luminace = yuv_original_color.r - filter_color_luminance;
     //vec3 sobel_color = kernel_filter33(left_eye_sampler,image_coord,texture_size,horizontal_sobel_kernel).rgb+kernel_filter33(left_eye_sampler,image_coord,texture_size,vertical_sobel_kernel).rgb;
@@ -194,7 +233,7 @@ void main()
     mat2 tensor_offset_minus_x = calc_tensor(left_eye_sampler,image_coord+2*texel_size,texture_size);
     vec2 eigen_values = eigenvalues(tensor);
     vec2 eigen_values_offset = eigenvalues(tensor_offset);*/
-    dvec2 eigen_values_00 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(-1,-1),texture_size);
+    /*dvec2 eigen_values_00 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(-1,-1),texture_size);
     dvec2 eigen_values_01 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(0,-1),texture_size);
     dvec2 eigen_values_02 = calc_eigenvalues_from_sampler(left_eye_sampler,vec2(1,-1),texture_size);
 
@@ -233,7 +272,7 @@ void main()
         -1.0, -1.0, -1.0,
         -1.0,  8.0, -1.0,
         -1.0, -1.0, -1.0
-    );
+    );*/
 
     /*vec2 gradiant_min_lambda = vec2(
         mat_dot(horizontal_sobel_kernel,min_lambda),//dot(horizontal_sobel_kernel[0],min_lambda[0])+dot(horizontal_sobel_kernel[1],min_lambda[1])+dot(horizontal_sobel_kernel[2],min_lambda[2]),
@@ -249,7 +288,7 @@ void main()
         test = vec3(0.0);
     }*/
 
-    
+    /*
     float threshold = 0.1;
 
     if(abs(min_lambda[1][1])>threshold){
@@ -258,12 +297,14 @@ void main()
         test = vec3(0.0,1.0,0.0);
         }
     }
+    */
     
 
     /*if(min(eigen_values.x,abs(eigen_values.y)) > threshold){
     }*/
     //test = vec3(0,eigen_values.y*-1,0.0);
-    vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
+    //vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
+    vec3 final_color= vec3(calc_disparity(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     color = vec4(final_color,1.0);
 }
  

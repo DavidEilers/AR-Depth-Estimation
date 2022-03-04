@@ -107,10 +107,25 @@ class ContextManager
         context = std::make_unique<ContextManager>();
 
         app->setup();
-
+        double time_frame_start;
+        double time_frame_finish;
+        double frame_time = 0;
+        double prev_print_time = glfwGetTime();
+        constexpr double timer_print_threshold = 5.0; //Every 5 seconds
         while(context->should_window_close() == false){
+            time_frame_start = glfwGetTime();
+
             context->update_window();
             app->draw(context->width, context->height);
+            glFlush();glFinish();
+
+            time_frame_finish = glfwGetTime();
+            frame_time = time_frame_finish-time_frame_start;            
+            if(time_frame_finish - prev_print_time > timer_print_threshold){
+                logger_info << "frametime:" << frame_time;
+                prev_print_time = time_frame_finish; 
+            }
+            
             context->swap_buffers();
         }
         context.reset();
