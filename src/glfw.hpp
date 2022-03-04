@@ -111,6 +111,7 @@ class ContextManager
         double time_frame_finish;
         double frame_time = 0;
         double prev_print_time = glfwGetTime();
+        double frame_time_avg = 0;
         constexpr double timer_print_threshold = 5.0; //Every 5 seconds
         while(context->should_window_close() == false){
             time_frame_start = glfwGetTime();
@@ -120,10 +121,12 @@ class ContextManager
             glFlush();glFinish();
 
             time_frame_finish = glfwGetTime();
-            frame_time = time_frame_finish-time_frame_start;            
+            frame_time = time_frame_finish-time_frame_start;
+            frame_time_avg = (frame_time_avg+frame_time)/2.0;            
             if(time_frame_finish - prev_print_time > timer_print_threshold){
-                logger_info << "frametime:" << frame_time;
-                prev_print_time = time_frame_finish; 
+                logger_info << "frametime:" << frame_time_avg;
+                prev_print_time = time_frame_finish;
+                frame_time_avg = frame_time; 
             }
             
             context->swap_buffers();
