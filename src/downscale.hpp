@@ -5,11 +5,10 @@
 #include "sampler.hpp"
 #include "shader.hpp"
 #include "log.hpp"
-#include "downscale.hpp"
 
 namespace arDepthEstimation{
 
-    class DepthEstimator{
+    class Downscaler{
       
         struct Vertex
         {
@@ -30,8 +29,6 @@ namespace arDepthEstimation{
         int m_output_height;
         GLuint m_framebuffer_id;
         GLuint m_framebuffer_texture_id;
-        Downscaler* m_downscaler;
-
 
 
 
@@ -41,10 +38,13 @@ namespace arDepthEstimation{
 
             glGenTextures(1,&m_framebuffer_texture_id);
             glBindTexture(GL_TEXTURE_2D,m_framebuffer_texture_id);
-            glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_output_width,m_output_height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
+            logger_info << "Input Dimension" << m_input_width << m_input_height;
+            logger_info << "Output Dimension" << m_output_width << m_output_height;
+            glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA4,m_output_width,m_output_height,0,GL_RG,GL_UNSIGNED_BYTE,nullptr);
             glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,m_framebuffer_texture_id,0);
             GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
             if(status != GL_FRAMEBUFFER_COMPLETE){
+                logger_error << "framebuffer not complete" << status;
                 throw std::runtime_error("framebuffer not complete!");
             }
 
@@ -65,8 +65,8 @@ namespace arDepthEstimation{
 
         void inline create_shader(){
         std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "depth_estimation.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "depth_estimation.frag.glsl");
+        std::string vertex_shader_path(shader_dir + "downscale.vert.glsl");
+        std::string fragment_shader_path(shader_dir + "downscale.frag.glsl");
 
         m_shader =  new Shader{vertex_shader_path, fragment_shader_path};
 
@@ -108,19 +108,17 @@ namespace arDepthEstimation{
         public:
 
 
-        DepthEstimator(int input_width, int input_height): m_input_width{input_width}, m_input_height{input_height}, m_output_width{input_width/4},m_output_height{input_height/4}{
+        Downscaler(int input_width, int input_height, int output_width, int output_height): m_input_width{input_width}, m_input_height{input_height},m_output_width{output_width},m_output_height{output_height}{
+
             create_framebuffer();
             create_shader();
             create_vao();
-            logger_info << "Depth Estimatior" <<m_input_width/2 << m_input_height/2 << m_output_width << m_output_height;
-            m_downscaler = new Downscaler{m_input_width/2,m_input_height/2,m_output_width,m_output_height};
         }
 
-        ~DepthEstimator(){
+        ~Downscaler(){
             delete_framebuffer();
             delete_shader();
             delete_vao();
-            delete m_downscaler;
         }
 
         GLuint get_framebuffer_texture_id(){
@@ -128,17 +126,15 @@ namespace arDepthEstimation{
         }
 
         void update_depth_map(GLuint left_eye_texture_id, GLuint right_eye_texture_id){
-            m_downscaler->update_depth_map(left_eye_texture_id, right_eye_texture_id);
-            GLuint texture = m_downscaler->get_framebuffer_texture_id();
             glUseProgram(m_shader->m_program_id);
-            glUniform2i(m_texture_size_loc, m_output_width, m_output_height);
+            glUniform2i(m_texture_size_loc, m_input_width, m_input_height);
             glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
             glViewport(0, 0, m_output_width, m_output_height);
             //glClear(GL_COLOR_BUFFER_BIT);
             glBindVertexArray(m_vao);
             m_sampler_left_eye.bind(0);
             m_sampler_right_eye.bind(1);
-            glBindTextureUnit(0,texture);
+            glBindTextureUnit(0,left_eye_texture_id);
             glBindTextureUnit(1,right_eye_texture_id);
 
             glDrawArrays(GL_TRIANGLES,0,6);
@@ -146,7 +142,7 @@ namespace arDepthEstimation{
             glBindTextureUnit(0,0);
             glBindTextureUnit(1,0);
             m_sampler_left_eye.unbind(0);
-           m_sampler_right_eye.unbind(1);
+            m_sampler_right_eye.unbind(1);
             glBindVertexArray(0);
             glBindFramebuffer(GL_FRAMEBUFFER,0);
             glUseProgram(0);

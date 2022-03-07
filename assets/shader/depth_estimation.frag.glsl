@@ -194,7 +194,7 @@ mat3 luminance_33(sampler2D sampler_obj, vec2 coord){
         for(int j = 0; j < 3; j++){
             filter_pixel_offset = vec2(i-1,j-1);
             filter_offset = filter_pixel_offset*texel_size;
-            luminance[i][j] = rgb_to_yuv(texture(sampler_obj,coord+filter_offset).rgb).r;
+            luminance[i][j] = texture(sampler_obj,coord+filter_offset).r;
         }
     }
     return luminance;
@@ -203,25 +203,26 @@ mat3 luminance_33(sampler2D sampler_obj, vec2 coord){
 void fill_buff(in out mat3 buff, int row, sampler2D sampler_obj, vec2 pixel_coord){
     vec2 texel_size = get_texel_size();
     vec2 coord = pixel_coord*texel_size;
-    buff[row][0] = rgb_to_luminance(texture(sampler_obj,coord+vec2(0,-1)*texel_size).rgb);
-    buff[row][1] = rgb_to_luminance(texture(sampler_obj,coord+vec2(0,0)*texel_size).rgb);
-    buff[row][2] = rgb_to_luminance(texture(sampler_obj,coord+vec2(0,1)*texel_size).rgb);
+    buff[row][0] = texture(sampler_obj,coord+vec2(0,-1)*texel_size).g;
+    buff[row][1] = texture(sampler_obj,coord+vec2(0,0)*texel_size).g;
+    buff[row][2] = texture(sampler_obj,coord+vec2(0,1)*texel_size).g;
 }
 
 float calc_disparity(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
     vec2 texel_size = get_texel_size();
     vec2 pos_left = coord/texel_size;
     //float result = 100;
-    if(pos_left.x + 800 < size.x){
-        size.x = int(pos_left.x + 800);
+    int max_x_distance= int(size.x*0.5);
+    if(pos_left.x + max_x_distance < size.x){
+        size.x = int(pos_left.x + max_x_distance);
     }
     mat3 luminance_right = luminance_33(image_left,coord);
     mat3 ring_buffer_texel_fetch;
-    fill_buff(ring_buffer_texel_fetch,0,right_eye_sampler,pos_left+vec2(-1,0));
-    fill_buff(ring_buffer_texel_fetch,1,right_eye_sampler,pos_left+vec2(0,0));
+    fill_buff(ring_buffer_texel_fetch,0,left_eye_sampler,pos_left+vec2(-1,0));
+    fill_buff(ring_buffer_texel_fetch,1,left_eye_sampler,pos_left+vec2(0,0));
     int ring_buffer_mid = 1;
     for(vec2 pos_right = pos_left; pos_right.x <=size.x; pos_right.x++){
-        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
+        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,left_eye_sampler,pos_right+vec2(1,0));
         float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_right);
         ring_buffer_mid = int(ring_buffer_mid+1)%3;
         if(tmp<0.1){
@@ -327,7 +328,9 @@ void main()
     }*/
     //test = vec3(0,eigen_values.y*-1,0.0);
     //vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
+   
     vec3 final_color= vec3(calc_disparity(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     color = vec4(final_color,1.0);
+    //color = vec4(vec3(texture(left_eye_sampler,image_coord).r),1.0);
 }
  
