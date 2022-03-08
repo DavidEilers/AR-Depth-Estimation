@@ -42,9 +42,9 @@ namespace arDepthEstimation{
             glBindTexture(GL_TEXTURE_2D,m_framebuffer_left_texture_id);
             logger_info << "Input Dimension" << m_input_width << m_input_height;
             logger_info << "Output Dimension" << m_output_width << m_output_height;
-            glTexImage2D(GL_TEXTURE_2D,0,GL_R8_EXT,m_output_width,m_output_height,0,GL_RED_INTEGER,GL_UNSIGNED_BYTE,nullptr);
+            glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_output_width,m_output_height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
             glBindTexture(GL_TEXTURE_2D,m_framebuffer_right_texture_id);
-            glTexImage2D(GL_TEXTURE_2D,0,GL_R8_EXT,m_output_width,m_output_height,0,GL_RED_INTEGER,GL_UNSIGNED_BYTE,nullptr);
+            glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_output_width,m_output_height,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
             glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,m_framebuffer_left_texture_id,0);
             glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT1,GL_TEXTURE_2D,m_framebuffer_right_texture_id,0);
             GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
