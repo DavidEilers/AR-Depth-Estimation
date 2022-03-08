@@ -113,7 +113,7 @@ namespace arDepthEstimation{
             create_shader();
             create_vao();
             logger_info << "Depth Estimatior" <<m_input_width/2 << m_input_height/2 << m_output_width << m_output_height;
-            m_downscaler = new Downscaler{m_input_width/2,m_input_height/2,m_output_width,m_output_height};
+            m_downscaler = new Downscaler{m_input_width/2,m_input_height/2,m_output_width,m_output_height,false};
         }
 
         ~DepthEstimator(){
@@ -128,7 +128,7 @@ namespace arDepthEstimation{
         }
 
         void update_depth_map(GLuint left_eye_texture_id, GLuint right_eye_texture_id){
-            m_downscaler->update_depth_map(left_eye_texture_id, right_eye_texture_id);
+            m_downscaler->downscale(left_eye_texture_id, right_eye_texture_id);
             GLuint texture_left = m_downscaler->get_framebuffer_left_texture_id();
             GLuint texture_right = m_downscaler->get_framebuffer_right_texture_id();
             glUseProgram(m_shader->m_program_id);
