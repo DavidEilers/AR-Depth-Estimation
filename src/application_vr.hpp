@@ -10,6 +10,8 @@ extern "C"{
 #include "texture.hpp"
 #include "init_vr.hpp"
 #include "mesh.hpp"
+#include "depth_estimation.hpp"
+#include "sampler.hpp"
 
 namespace arDepthEstimation{
 
@@ -36,6 +38,9 @@ class MainApplication : public Application{
     GLuint transform_loc;
     arDepthEstimation::Vr* vr;
     glm::mat4 identity_mat{1.0f};
+    DepthEstimator * depth_estimator;
+    LinearSampler sampler{};
+    
 
 
     public:
@@ -78,6 +83,10 @@ class MainApplication : public Application{
 
         vr = new Vr{};
         cubeMesh = new Mesh{};
+        int camera_feed_width = vr->texture->get_width();
+        int camera_feed_height = vr->texture->get_height();
+        depth_estimator = new DepthEstimator{camera_feed_width,camera_feed_height,false};
+        sampler.initialize_sampler();
 
     }
 
@@ -92,11 +101,16 @@ class MainApplication : public Application{
         vr->bind_window();
         glUseProgram(myShader->m_program_id);
         glBindVertexArray(vao);
-        glBindTexture(GL_TEXTURE_2D,vr->get_left_framebuffer_texture_id() );
+        sampler.bind(0);
+        //glBindTexture(GL_TEXTURE_2D,vr->get_left_framebuffer_texture_id() );
+        //glBindTexture(GL_TEXTURE_2D,depth_estimator->get_framebuffer_texture_id());
+        glBindTextureUnit(0,depth_estimator->get_framebuffer_texture_id());
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glViewport(0, 0, width, height);
             glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindTextureUnit(0,0);
+        sampler.unbind(0);
         glBindVertexArray(0);
         glUseProgram(0);
     }
@@ -104,6 +118,7 @@ class MainApplication : public Application{
     void inline draw_vr(){ 
         vr->start_frame();
         vr->update_texture();
+        depth_estimator->update_depth_map(vr->texture->get_texture_id(),vr->texture->get_texture_id());
         vr->update_camera_transform_matrix();
         
         vr->texture->bind();
@@ -145,6 +160,7 @@ class MainApplication : public Application{
     ~MainApplication(){
         delete vr;
         delete myShader;
+        delete depth_estimator;
     }
 };
 }

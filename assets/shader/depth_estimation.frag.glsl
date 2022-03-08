@@ -225,7 +225,7 @@ float calc_disparity(sampler2D image_left, sampler2D image_right, vec2 coord, iv
         fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
         float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_left);
         ring_buffer_mid = int(ring_buffer_mid+1)%3;
-        if(tmp<0.1){
+        if(tmp<0.05){
             float x_offset = (pos_right.x-pos_left.x)*texel_size.x;
             return x_offset;
         }

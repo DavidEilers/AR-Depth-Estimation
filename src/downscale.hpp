@@ -150,7 +150,7 @@ namespace arDepthEstimation{
         void downscale(GLuint left_eye_texture_id, GLuint right_eye_texture_id){
             glUseProgram(m_shader->m_program_id);
             glUniform2i(m_texture_size_loc, m_input_width, m_input_height);
-            glUniform1i(m_is_single_texture, GL_FALSE);
+            glUniform1i(m_is_single_texture_loc, GL_FALSE);
             glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
             glViewport(0, 0, m_per_eye_output_width, m_per_eye_output_height);
             //glClear(GL_COLOR_BUFFER_BIT);
@@ -180,7 +180,7 @@ namespace arDepthEstimation{
         void downscale(GLuint both_eye_texture_id){
             glUseProgram(m_shader->m_program_id);
             glUniform2i(m_texture_size_loc, m_input_width, m_input_height);
-            glUniform1i(m_is_single_texture, GL_TRUE);
+            glUniform1i(m_is_single_texture_loc, GL_TRUE);
             glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
             glViewport(0, 0, m_per_eye_output_width, m_per_eye_output_height);
             //glClear(GL_COLOR_BUFFER_BIT);

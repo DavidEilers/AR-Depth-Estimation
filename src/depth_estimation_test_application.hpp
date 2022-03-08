@@ -91,7 +91,7 @@ class MainApplication : public Application{
         
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        depth_estimator = new DepthEstimator{width,height};
+        depth_estimator = new DepthEstimator{width,height,false};
 
     }
 

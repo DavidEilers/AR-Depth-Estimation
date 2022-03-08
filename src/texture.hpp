@@ -22,6 +22,14 @@ class Texture
 
   public:
 
+    size_t get_width(){
+        return m_width;
+    }
+    
+    size_t get_height(){
+        return m_height;
+    }
+
     GLuint get_texture_id(){
         return m_texture_id;
     }
