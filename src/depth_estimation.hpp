@@ -129,7 +129,8 @@ namespace arDepthEstimation{
 
         void update_depth_map(GLuint left_eye_texture_id, GLuint right_eye_texture_id){
             m_downscaler->update_depth_map(left_eye_texture_id, right_eye_texture_id);
-            GLuint texture = m_downscaler->get_framebuffer_texture_id();
+            GLuint texture_left = m_downscaler->get_framebuffer_left_texture_id();
+            GLuint texture_right = m_downscaler->get_framebuffer_right_texture_id();
             glUseProgram(m_shader->m_program_id);
             glUniform2i(m_texture_size_loc, m_output_width, m_output_height);
             glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
@@ -138,8 +139,8 @@ namespace arDepthEstimation{
             glBindVertexArray(m_vao);
             m_sampler_left_eye.bind(0);
             m_sampler_right_eye.bind(1);
-            glBindTextureUnit(0,texture);
-            glBindTextureUnit(1,right_eye_texture_id);
+            glBindTextureUnit(0,texture_left);
+            glBindTextureUnit(1,texture_right);
 
             glDrawArrays(GL_TRIANGLES,0,6);
             
