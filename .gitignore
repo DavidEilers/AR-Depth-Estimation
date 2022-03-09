@@ -5,5 +5,6 @@ subprojects/google*
 subprojects/packagecache*
 subprojects/SDL2*/
 subprojects/glm*/
+subprojects/imgui*/
 build*/*
 assets/test_data/*

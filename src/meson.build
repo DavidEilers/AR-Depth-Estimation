@@ -38,6 +38,11 @@ glm_proj = subproject('glm')
 glm_dep = glm_proj.get_variable('glm_dep')
 dependencies += [glm_dep]
 
+### Get the neccessary dependencies for ImGUI
+imgui_proj = subproject('imgui')
+imgui_dep = imgui_proj.get_variable('imgui_dep')
+dependencies += [imgui_dep]
+
 ### Create symlink for assets folder
 copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_build_dir()+'/assets', check: true)
 
