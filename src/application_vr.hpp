@@ -36,6 +36,7 @@ class MainApplication : public Application{
     Mesh* cubeMesh;
     GLuint offset_loc;
     GLuint transform_loc;
+    GLuint is_upside_down_loc;
     arDepthEstimation::Vr* vr;
     glm::mat4 identity_mat{1.0f};
     DepthEstimator * depth_estimator;
@@ -80,12 +81,13 @@ class MainApplication : public Application{
 
         offset_loc = glGetUniformLocation(myShader->m_program_id,"offset");
         transform_loc = glGetUniformLocation(myShader->m_program_id,"transform");
+        is_upside_down_loc = glGetUniformLocation(myShader->m_program_id,"is_upside_down");
 
         vr = new Vr{};
         cubeMesh = new Mesh{};
         int camera_feed_width = vr->texture->get_width();
         int camera_feed_height = vr->texture->get_height();
-        depth_estimator = new DepthEstimator{camera_feed_width,camera_feed_height,false,1.6};
+        depth_estimator = new DepthEstimator{camera_feed_width,camera_feed_height,false,1.6,true};
         sampler.initialize_sampler();
 
     }
@@ -107,6 +109,7 @@ class MainApplication : public Application{
         glBindTextureUnit(0,depth_estimator->get_framebuffer_texture_id());
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
+            glUniform1i(is_upside_down_loc,GL_FALSE);
             glViewport(0, 0, width, height);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindTextureUnit(0,0);
@@ -129,6 +132,7 @@ class MainApplication : public Application{
             glBindVertexArray(vao);
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glUniform1f(offset_loc,0.0);
+            glUniform1i(is_upside_down_loc,GL_TRUE);
             glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
@@ -142,6 +146,7 @@ class MainApplication : public Application{
             glBindVertexArray(vao);
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
             glUniform1f(offset_loc,0.5);
+            glUniform1i(is_upside_down_loc,GL_TRUE);
             glUniformMatrix4fv(transform_loc,1,GL_FALSE,glm::value_ptr(identity_mat));
             glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
