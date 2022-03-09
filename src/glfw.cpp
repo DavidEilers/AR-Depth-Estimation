@@ -1,7 +1,8 @@
 #include "glfw.hpp"
 
-int main(){
+int main()
+{
     ContextManager a{};
-    printf("Test %d\n",a.f);
+    printf("Test %d\n", a.f);
     return 0;
 }

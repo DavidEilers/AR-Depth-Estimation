@@ -40,7 +40,7 @@ class LinearSampler : public ISampler
         glSamplerParameteri(m_sampler_id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glSamplerParameteri(m_sampler_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glSamplerParameteri(m_sampler_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        //glSamplerParameteri(m_sampler_id, GL_TEXTURE_MAX_LEVEL, 0);
+        // glSamplerParameteri(m_sampler_id, GL_TEXTURE_MAX_LEVEL, 0);
     }
 
     void bind(GLint position) override

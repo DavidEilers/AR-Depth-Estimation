@@ -10,8 +10,8 @@ namespace arDepthEstimation
 template <typename Pixel> class Image
 {
     std::vector<Pixel> m_image_data;
-    const size_t width;
-    const size_t height;
+    const size_t m_width;
+    const size_t m_height;
 
   public:
     /**
@@ -22,7 +22,7 @@ template <typename Pixel> class Image
      * @param data Pointer to the pixeldata in subsequent packed memory
      * @cond data must point to width*height*sizeof(pixel) readable memory space
      */
-    Image(size_t width, size_t height, Pixel *data) : width{width}, height{height}
+    Image(size_t width, size_t height, Pixel *data) : m_width{width}, m_height{height}
     {
         m_image_data.resize(width * height);
         std::memcpy(m_image_data.data(), data, sizeof(Pixel) * width * height);
@@ -44,15 +44,15 @@ template <typename Pixel> class Image
      */
     Pixel at(size_t x, size_t y)
     {
-        if (x > width)
+        if (x > m_width)
         {
             throw std::out_of_range("X is out of range!");
         }
-        if (y > height)
+        if (y > m_height)
         {
             throw std::out_of_range("Y is out of range!");
         }
-        return m_image_data[y * width + x];
+        return m_image_data[y * m_width + x];
     }
 };
 

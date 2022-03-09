@@ -21,16 +21,18 @@ class Texture
     GLint m_sampler_position;
 
   public:
-
-    size_t get_width(){
+    size_t get_width()
+    {
         return m_width;
     }
-    
-    size_t get_height(){
+
+    size_t get_height()
+    {
         return m_height;
     }
 
-    GLuint get_texture_id(){
+    GLuint get_texture_id()
+    {
         return m_texture_id;
     }
     void bind()
