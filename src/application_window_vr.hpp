@@ -15,6 +15,23 @@ namespace arDepthEstimation
 
 class WindowRenderer
 {
+    struct TextureInfo{
+        std::string m_name;
+        GLuint m_texture_id;
+        bool m_is_upside_down;
+
+
+        TextureInfo(std::string name,GLuint texture_id, bool is_upside_down):
+        m_name{name},
+        m_texture_id{texture_id},
+        m_is_upside_down{is_upside_down}
+        {}
+        
+        TextureInfo():TextureInfo("",0,false)
+        {}
+
+        ~TextureInfo(){}
+    };
 
     struct Vertex
     {
@@ -32,27 +49,29 @@ class WindowRenderer
     GLuint m_vertex_buffer, m_vao;
     Shader *m_shader;
     GLuint m_framebuffer_id;
-    GLuint m_active_texture_id;
+    TextureInfo m_active_texture{};
     GLuint m_offset_loc;
     GLuint m_transform_loc;
     GLuint m_is_upside_down_loc;
     glm::mat4 m_identity_mat{1.0f};
     DepthEstimator *m_depth_estimator;
     LinearSampler m_sampler{};
-    std::map<std::string,GLuint> m_framebuffer_textures;
+    std::vector<TextureInfo> m_framebuffer_textures;
 
-    void add_framebuffer_texture(std::string name, GLuint texture_id){
-        m_framebuffer_textures.insert({name,texture_id});
-    }
+
 
   public:
+    void add_framebuffer_texture(std::string name, GLuint texture_id, bool is_upside_down=false){
+        m_framebuffer_textures.emplace_back(name,texture_id,is_upside_down);
+    }
     void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
         logger_info << "Key was pressed!";
     }
 
-    WindowRenderer(GLuint framebuffer_id, GLuint active_texture_id) : m_framebuffer_id{framebuffer_id}, m_active_texture_id{active_texture_id}
+    WindowRenderer(GLuint framebuffer_id, GLuint active_texture_id) : m_framebuffer_id{framebuffer_id}
     {
+        m_active_texture.m_texture_id=active_texture_id;
         glGenVertexArrays(1, &m_vao);
         glBindVertexArray(m_vao);
         glGenBuffers(1, &m_vertex_buffer);
@@ -78,22 +97,39 @@ class WindowRenderer
         m_sampler.initialize_sampler();
     }
 
+    void inline draw_imgui(){
+        ImGui::Begin("Options");
+        ImGui::BeginListBox("framebuffer");
+        for(auto &e : m_framebuffer_textures){
+            const bool selected = (e.m_texture_id==m_active_texture.m_texture_id);
+            if(ImGui::Selectable(e.m_name.c_str(),&selected)){
+                m_active_texture = e;
+            }
+            if(selected){
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndListBox();
+        ImGui::End();
+    }
+
     void inline draw_window(int width, int height)
     {
         glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
         glUseProgram(m_shader->m_program_id);
         glBindVertexArray(m_vao);
         m_sampler.bind(0);
-        glBindTextureUnit(0, m_active_texture_id);
+        glBindTextureUnit(0, m_active_texture.m_texture_id);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
-        glUniform1i(m_is_upside_down_loc, GL_FALSE);
+        glUniform1i(m_is_upside_down_loc, m_active_texture.m_is_upside_down? GL_TRUE: GL_FALSE );
         glViewport(0, 0, width, height);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindTextureUnit(0, 0);
         m_sampler.unbind(0);
         glBindVertexArray(0);
         glUseProgram(0);
+        draw_imgui();
     }
 
     ~WindowRenderer()

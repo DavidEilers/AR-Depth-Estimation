@@ -92,6 +92,13 @@ class MainApplication : public Application
         m_depth_estimator = new DepthEstimator{camera_feed_width, camera_feed_height, false, 1.6, true};
         m_sampler.initialize_sampler();
         m_window_renderer = new WindowRenderer{0,m_depth_estimator->get_framebuffer_texture_id()};
+        m_window_renderer->add_framebuffer_texture("Image left",m_vr->m_texture->get_texture_id(),true);
+        m_window_renderer->add_framebuffer_texture("Luminance Left",m_depth_estimator->get_luminance_camera_left());
+        m_window_renderer->add_framebuffer_texture("Luminance Right",m_depth_estimator->get_luminance_camera_right());
+        m_window_renderer->add_framebuffer_texture("Disparity Map Left",m_depth_estimator->get_framebuffer_texture_id());
+        m_window_renderer->add_framebuffer_texture("HMD output left",m_vr->get_left_framebuffer_texture_id());
+        m_window_renderer->add_framebuffer_texture("HMD output right",m_vr->get_right_framebuffer_texture_id());
+
     }
 
     void draw(int width, int height)
@@ -106,7 +113,7 @@ class MainApplication : public Application
     {
         m_vr->start_frame();
         m_vr->update_texture();
-        m_depth_estimator->update_depth_map(m_vr->m_texture->get_texture_id(), m_vr->m_texture->get_texture_id());
+        m_depth_estimator->update_depth_map(m_vr->m_texture->get_texture_id());
         m_vr->update_camera_transform_matrix();
 
         m_vr->m_texture->bind();

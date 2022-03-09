@@ -190,5 +190,12 @@ class DepthEstimator
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);
     }
+
+    GLuint get_luminance_camera_left(){
+        return m_downscaler->get_framebuffer_left_texture_id();
+    }
+    GLuint get_luminance_camera_right(){
+        return m_downscaler->get_framebuffer_right_texture_id();
+    }
 };
 } // namespace arDepthEstimation

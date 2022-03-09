@@ -8,8 +8,8 @@ layout (binding = 2) uniform sampler2D both_eye_sampler;
 uniform ivec2 texture_size;
 uniform bool is_single_texture = false;
 uniform float gamma = 1.0;
-layout(location = 0)out float color_left;
-layout(location = 1)out float color_right;
+layout(location = 0)out vec4 color_left;
+layout(location = 1)out vec4 color_right;
 vec2 texel_size;
 
 
@@ -70,11 +70,15 @@ void main()
     texel_size = get_texel_size();
 
     if(is_single_texture== true){ // Left and right image are in one texture an o
-        color_left = luminance_gaussian55(both_eye_sampler,image_coord*vec2(0.5,1), vec2(0.0,0.0));
-        color_right = luminance_gaussian55(both_eye_sampler,image_coord*vec2(0.5,1),vec2(0.5,0.0));
+        float left_luminance = luminance_gaussian55(both_eye_sampler,image_coord, vec2(0.0,0.0));
+        color_left = vec4(vec3(left_luminance),1.0);
+        float right_luminance = luminance_gaussian55(both_eye_sampler,image_coord,vec2(0.5,0.0));
+        color_right = vec4(vec3(right_luminance),1.0);
     } else{
-        color_left = luminance_gaussian55(left_eye_sampler,image_coord, vec2(0.0));
-        color_right = luminance_gaussian55(right_eye_sampler,image_coord,vec2(0.0));
+        float left_luminance = luminance_gaussian55(left_eye_sampler,image_coord, vec2(0.0,0.0));
+        color_left = vec4(vec3(left_luminance),1.0);
+        float right_luminance = luminance_gaussian55(right_eye_sampler,image_coord,vec2(0.0,0.0));
+        color_right = vec4(vec3(right_luminance),1.0);
     }
 }
  

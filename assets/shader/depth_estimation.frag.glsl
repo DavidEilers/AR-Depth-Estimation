@@ -331,7 +331,7 @@ void main()
    
     vec3 final_color= vec3(calc_disparity(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     //final_color = final_color*5;
-    //color = vec4(final_color,1.0);
-    color = vec4(vec3(texture(left_eye_sampler,image_coord).r),1.0);
+    color = vec4(final_color,1.0);
+    //color = vec4(vec3(texture(left_eye_sampler,image_coord).r),1.0);
 }
  

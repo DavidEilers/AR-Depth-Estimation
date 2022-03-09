@@ -3,6 +3,10 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include "linmath.h"
 
 #include <memory>
@@ -93,6 +97,14 @@ class ContextManager
         logger_info << "GLFW Version: " << glfwGetVersionString();
         logger_info << "OpenGL Version: " << glGetString(GL_VERSION);
         glfwSwapInterval(1);
+
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+        ImGui_ImplOpenGL3_Init("#version 450");
+
     }
 
     ~ContextManager()
@@ -118,6 +130,10 @@ void run_app(Application *app)
     while (m_context->should_window_close() == false)
     {
         time_frame_start = glfwGetTime();
+        
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         m_context->update_window();
         app->draw(m_context->m_width, m_context->m_height);
@@ -133,6 +149,10 @@ void run_app(Application *app)
             prev_print_time = time_frame_finish;
             frame_time_avg = frame_time;
         }
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+        ImGui::Render();
+        glViewport(0, 0, m_context->m_width, m_context->m_height);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         m_context->swap_buffers();
     }
