@@ -81,7 +81,7 @@ class MainApplication : public Application
 
         m_sampler.initialize_sampler();
         m_texture_left =
-            new arDepthEstimation::Texture{width, height, GL_RGBA8, GL_UNSIGNED_BYTE, image_data_left, &m_sampler, 0};
+            new arDepthEstimation::Texture{static_cast<size_t>(width), static_cast<size_t>(height), GL_RGBA8, GL_UNSIGNED_BYTE, image_data_left, &m_sampler, 0};
         stbi_image_free(image_data_left);
 
         std::byte *image_data_right =
@@ -92,7 +92,7 @@ class MainApplication : public Application
             std::runtime_error("couldn't load image!");
         }
         m_texture_right =
-            new arDepthEstimation::Texture{width, height, GL_RGBA8, GL_UNSIGNED_BYTE, image_data_right, &m_sampler, 0};
+            new arDepthEstimation::Texture{static_cast<size_t>(width), static_cast<size_t>(height), GL_RGBA8, GL_UNSIGNED_BYTE, image_data_right, &m_sampler, 0};
         stbi_image_free(image_data_right);
 
         glBindVertexArray(0);
