@@ -1,24 +1,19 @@
 #pragma once
 #include "glfw.hpp"
-extern "C"
-{
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-}
 
 #include <cstddef>
+#include <map>
 
 #include "depth_estimation.hpp"
 #include "init_vr.hpp"
 #include "mesh.hpp"
 #include "sampler.hpp"
 #include "texture.hpp"
-#include "application_window_vr.hpp"
 
 namespace arDepthEstimation
 {
 
-class MainApplication : public Application
+class WindowRenderer
 {
 
     struct Vertex
@@ -36,15 +31,19 @@ class MainApplication : public Application
     };
     GLuint m_vertex_buffer, m_vao;
     Shader *m_shader;
-    Mesh *m_cube_mesh;
+    GLuint m_framebuffer_id;
+    GLuint m_active_texture_id;
     GLuint m_offset_loc;
     GLuint m_transform_loc;
     GLuint m_is_upside_down_loc;
-    arDepthEstimation::Vr *m_vr;
     glm::mat4 m_identity_mat{1.0f};
     DepthEstimator *m_depth_estimator;
     LinearSampler m_sampler{};
-    WindowRenderer *m_window_renderer;
+    std::map<std::string,GLuint> m_framebuffer_textures;
+
+    void add_framebuffer_texture(std::string name, GLuint texture_id){
+        m_framebuffer_textures.insert({name,texture_id});
+    }
 
   public:
     void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -52,16 +51,8 @@ class MainApplication : public Application
         logger_info << "Key was pressed!";
     }
 
-    void setup()
+    WindowRenderer(GLuint framebuffer_id, GLuint active_texture_id) : m_framebuffer_id{framebuffer_id}, m_active_texture_id{active_texture_id}
     {
-#define DEBUG_GL
-#ifdef DEBUG_GL
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(MessageCallback, 0);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-#endif
-
         glGenVertexArrays(1, &m_vao);
         glBindVertexArray(m_vao);
         glGenBuffers(1, &m_vertex_buffer);
@@ -84,72 +75,30 @@ class MainApplication : public Application
         m_offset_loc = glGetUniformLocation(m_shader->m_program_id, "offset");
         m_transform_loc = glGetUniformLocation(m_shader->m_program_id, "transform");
         m_is_upside_down_loc = glGetUniformLocation(m_shader->m_program_id, "is_upside_down");
-
-        m_vr = new Vr{};
-        m_cube_mesh = new Mesh{};
-        int camera_feed_width = m_vr->m_texture->get_width();
-        int camera_feed_height = m_vr->m_texture->get_height();
-        m_depth_estimator = new DepthEstimator{camera_feed_width, camera_feed_height, false, 1.6, true};
         m_sampler.initialize_sampler();
-        m_window_renderer = new WindowRenderer{0,m_depth_estimator->get_framebuffer_texture_id()};
     }
 
-    void draw(int width, int height)
+    void inline draw_window(int width, int height)
     {
-        draw_vr();
-        m_window_renderer->draw_window(width,height);
-        glFlush();
-        glFinish();
-    }
-
-    void inline draw_vr()
-    {
-        m_vr->start_frame();
-        m_vr->update_texture();
-        m_depth_estimator->update_depth_map(m_vr->m_texture->get_texture_id(), m_vr->m_texture->get_texture_id());
-        m_vr->update_camera_transform_matrix();
-
-        m_vr->m_texture->bind();
-        glEnable(GL_MULTISAMPLE);
-
-        m_vr->bind_left_eye();
+        glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
         glUseProgram(m_shader->m_program_id);
         glBindVertexArray(m_vao);
+        m_sampler.bind(0);
+        glBindTextureUnit(0, m_active_texture_id);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUniform1f(m_offset_loc, 0.0);
-        glUniform1i(m_is_upside_down_loc, GL_TRUE);
         glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
+        glUniform1i(m_is_upside_down_loc, GL_FALSE);
+        glViewport(0, 0, width, height);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindTextureUnit(0, 0);
+        m_sampler.unbind(0);
         glBindVertexArray(0);
         glUseProgram(0);
-        m_cube_mesh->draw();
-        m_vr->blit_frame_left();
-
-        m_vr->bind_right_eye();
-        glUseProgram(m_shader->m_program_id);
-        glBindVertexArray(m_vao);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUniform1f(m_offset_loc, 0.5);
-        glUniform1i(m_is_upside_down_loc, GL_TRUE);
-        glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
-        glUseProgram(0);
-        m_cube_mesh->draw();
-        m_vr->blit_frame_right();
-
-        glDisable(GL_MULTISAMPLE);
-
-        m_vr->m_texture->unbind();
-        m_vr->submit_frames();
-        glFinish();
     }
 
-    ~MainApplication()
+    ~WindowRenderer()
     {
-        delete m_vr;
         delete m_shader;
-        delete m_depth_estimator;
     }
 };
 } // namespace arDepthEstimation
