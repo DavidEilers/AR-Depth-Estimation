@@ -225,7 +225,7 @@ float calc_disparity(sampler2D image_left, sampler2D image_right, vec2 coord, iv
         fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
         float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_left);
         ring_buffer_mid = int(ring_buffer_mid+1)%3;
-        if(tmp<0.05){
+        if(tmp<0.2){
             float x_offset = (pos_right.x-pos_left.x)*texel_size.x;
             return x_offset;
         }
@@ -330,7 +330,8 @@ void main()
     //vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
    
     vec3 final_color= vec3(calc_disparity(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
-    color = vec4(final_color,1.0);
-    //color = vec4(vec3(texture(right_eye_sampler,image_coord).r),1.0);
+    //final_color = final_color*5;
+    //color = vec4(final_color,1.0);
+    color = vec4(vec3(texture(left_eye_sampler,image_coord).r),1.0);
 }
  

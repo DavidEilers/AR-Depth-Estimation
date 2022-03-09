@@ -108,12 +108,12 @@ namespace arDepthEstimation{
         public:
 
 
-        DepthEstimator(int input_width, int input_height, bool is_single_texture): m_input_width{input_width}, m_input_height{input_height}, m_output_width{input_width/4},m_output_height{input_height/4}{
+        DepthEstimator(int input_width, int input_height, bool is_single_texture, float gamma=1.0): m_input_width{input_width}, m_input_height{input_height}, m_output_width{input_width/4},m_output_height{input_height/4}{
             create_framebuffer();
             create_shader();
             create_vao();
             logger_info << "Depth Estimatior" <<m_input_width/2 << m_input_height/2 << m_output_width << m_output_height;
-            m_downscaler = new Downscaler{m_input_width/2,m_input_height/2,m_output_width,m_output_height,is_single_texture};
+            m_downscaler = new Downscaler{m_input_width/2,m_input_height/2,m_output_width,m_output_height,is_single_texture, gamma};
         }
 
         ~DepthEstimator(){

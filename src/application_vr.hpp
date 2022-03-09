@@ -85,7 +85,7 @@ class MainApplication : public Application{
         cubeMesh = new Mesh{};
         int camera_feed_width = vr->texture->get_width();
         int camera_feed_height = vr->texture->get_height();
-        depth_estimator = new DepthEstimator{camera_feed_width,camera_feed_height,false};
+        depth_estimator = new DepthEstimator{camera_feed_width,camera_feed_height,false,1.6};
         sampler.initialize_sampler();
 
     }

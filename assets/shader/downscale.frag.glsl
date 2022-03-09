@@ -7,9 +7,11 @@ layout (binding = 1) uniform sampler2D right_eye_sampler;
 layout (binding = 2) uniform sampler2D both_eye_sampler;
 uniform ivec2 texture_size;
 uniform bool is_single_texture = false;
+uniform float gamma = 1.0;
 layout(location = 0)out float color_left;
 layout(location = 1)out float color_right;
 vec2 texel_size;
+
 
 
 
@@ -18,7 +20,7 @@ float luminance_kernel_filter55(sampler2D sampler_obj, vec2 coord,float kernel[2
     for(int i=0; i<5; i++){
         for(int j=0; j<5;j++){
             vec2 offset_coord = coord + vec2((i-2),(j-2))*texel_size;
-            filter_color += kernel[j*5+i] * dot(texture(sampler_obj,offset_coord+offset).rgb,vec3(0.299,0.587,0.114));
+            filter_color += kernel[j*5+i] * dot(pow(texture(sampler_obj,offset_coord+offset).rgb,vec3(1/gamma)),vec3(0.299,0.587,0.114));
         }
     }
     return filter_color;

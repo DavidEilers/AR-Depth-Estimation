@@ -29,6 +29,7 @@ namespace arDepthEstimation{
         int m_per_eye_output_width;
         int m_per_eye_output_height;
         int m_output_height;
+        float m_gamma;
         GLuint m_framebuffer_id;
         GLuint m_framebuffer_right_texture_id;
         GLuint m_framebuffer_left_texture_id;
@@ -72,6 +73,7 @@ namespace arDepthEstimation{
         LinearSampler m_sampler_both_eyes{};
         GLuint m_texture_size_loc;
         GLuint m_is_single_texture_loc;
+        GLuint m_gamma_loc;
         bool m_is_single_texture;
 
         void inline create_shader(){
@@ -86,6 +88,7 @@ namespace arDepthEstimation{
 
         m_texture_size_loc = glGetUniformLocation(m_shader->m_program_id,"texture_size");
         m_is_single_texture_loc = glGetUniformLocation(m_shader->m_program_id,"is_single_texture");
+        m_gamma_loc = glGetUniformLocation(m_shader->m_program_id,"gamma");
 
 
         logger_info << "texture size Loc = "<< m_texture_size_loc;
@@ -121,7 +124,7 @@ namespace arDepthEstimation{
         public:
 
 
-        Downscaler(int input_width, int input_height, int output_width, int output_height, bool is_single_texture): m_input_width{input_width}, m_input_height{input_height},m_output_width{output_width},m_output_height{output_height}, m_is_single_texture{is_single_texture}{
+        Downscaler(int input_width, int input_height, int output_width, int output_height, bool is_single_texture, float gamma=1.0): m_input_width{input_width}, m_input_height{input_height},m_output_width{output_width},m_output_height{output_height}, m_is_single_texture{is_single_texture}, m_gamma{gamma}{
             m_per_eye_output_height = m_output_height;
             if(m_is_single_texture){
                 m_per_eye_output_width = m_output_width/2;
@@ -151,6 +154,7 @@ namespace arDepthEstimation{
             glUseProgram(m_shader->m_program_id);
             glUniform2i(m_texture_size_loc, m_input_width, m_input_height);
             glUniform1i(m_is_single_texture_loc, GL_FALSE);
+            glUniform1f(m_gamma_loc, m_gamma);
             glBindFramebuffer(GL_FRAMEBUFFER,m_framebuffer_id);
             glViewport(0, 0, m_per_eye_output_width, m_per_eye_output_height);
             //glClear(GL_COLOR_BUFFER_BIT);
