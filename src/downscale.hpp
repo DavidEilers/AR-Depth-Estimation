@@ -221,7 +221,7 @@ class Downscaler
         glDrawBuffers(1, attachments_after);
 
         glBindTextureUnit(2, 0);
-        m_sampler_both_eyes.unbind(0);
+        m_sampler_both_eyes.unbind(2);
         glBindVertexArray(0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);

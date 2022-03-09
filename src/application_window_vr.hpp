@@ -86,13 +86,13 @@ class WindowRenderer
         glClearColor(0.5f, 0.5f, 0.5, 1.0);
 
         std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "screen_quad.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "screen_quad.frag.glsl");
+        std::string vertex_shader_path(shader_dir + "screen_quad_simple.vert.glsl");
+        std::string fragment_shader_path(shader_dir + "screen_quad_simple.frag.glsl");
 
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 
-        m_offset_loc = glGetUniformLocation(m_shader->m_program_id, "offset");
-        m_transform_loc = glGetUniformLocation(m_shader->m_program_id, "transform");
+        //m_offset_loc = glGetUniformLocation(m_shader->m_program_id, "offset");
+        //m_transform_loc = glGetUniformLocation(m_shader->m_program_id, "transform");
         m_is_upside_down_loc = glGetUniformLocation(m_shader->m_program_id, "is_upside_down");
         m_sampler.initialize_sampler();
     }
@@ -121,7 +121,6 @@ class WindowRenderer
         m_sampler.bind(0);
         glBindTextureUnit(0, m_active_texture.m_texture_id);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
         glUniform1i(m_is_upside_down_loc, m_active_texture.m_is_upside_down? GL_TRUE: GL_FALSE );
         glViewport(0, 0, width, height);
         glDrawArrays(GL_TRIANGLES, 0, 6);

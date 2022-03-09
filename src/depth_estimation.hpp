@@ -172,7 +172,7 @@ class DepthEstimator
         glUseProgram(m_shader->m_program_id);
         glUniform2i(m_texture_size_loc, m_output_width / 2, m_output_height);
         glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_id);
-        glViewport(0, 0, m_output_width / 2, m_output_height);
+        glViewport(0, 0, m_output_width, m_output_height);
         // glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(m_vao);
         m_sampler_left_eye.bind(0);

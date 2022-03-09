@@ -89,10 +89,10 @@ class MainApplication : public Application
         m_cube_mesh = new Mesh{};
         int camera_feed_width = m_vr->m_texture->get_width();
         int camera_feed_height = m_vr->m_texture->get_height();
-        m_depth_estimator = new DepthEstimator{camera_feed_width, camera_feed_height, false, 1.6, true};
+        m_depth_estimator = new DepthEstimator{camera_feed_width, camera_feed_height,true, 1.6, true};
         m_sampler.initialize_sampler();
         m_window_renderer = new WindowRenderer{0,m_depth_estimator->get_framebuffer_texture_id()};
-        m_window_renderer->add_framebuffer_texture("Image left",m_vr->m_texture->get_texture_id(),true);
+        m_window_renderer->add_framebuffer_texture("Image both cameras",m_vr->m_texture->get_texture_id(),true);
         m_window_renderer->add_framebuffer_texture("Luminance Left",m_depth_estimator->get_luminance_camera_left());
         m_window_renderer->add_framebuffer_texture("Luminance Right",m_depth_estimator->get_luminance_camera_right());
         m_window_renderer->add_framebuffer_texture("Disparity Map Left",m_depth_estimator->get_framebuffer_texture_id());
