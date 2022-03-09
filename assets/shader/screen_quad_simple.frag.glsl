@@ -6,6 +6,6 @@ out vec4 color;
 
 void main()
 {
-    color = vec4(texture(image_sampler,image_coord).rgb, 1.0);
+    color = vec4(pow(texture(image_sampler,image_coord).rgb,vec3(1.0/1.5)), 1.0);
 }
  

@@ -45,6 +45,7 @@ class MainApplication : public Application
     DepthEstimator *m_depth_estimator;
     LinearSampler m_sampler{};
     WindowRenderer *m_window_renderer;
+    LinearSampler m_disparity_sampler{};
 
   public:
     void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -91,6 +92,7 @@ class MainApplication : public Application
         int camera_feed_height = m_vr->m_texture->get_height();
         m_depth_estimator = new DepthEstimator{camera_feed_width, camera_feed_height,true, 1.6, true};
         m_sampler.initialize_sampler();
+        m_disparity_sampler.initialize_sampler();
         m_window_renderer = new WindowRenderer{0,m_depth_estimator->get_framebuffer_texture_id()};
         m_window_renderer->add_framebuffer_texture("Image both cameras",m_vr->m_texture->get_texture_id(),true);
         m_window_renderer->add_framebuffer_texture("Luminance Left",m_depth_estimator->get_luminance_camera_left());
@@ -122,14 +124,20 @@ class MainApplication : public Application
         m_vr->bind_left_eye();
         glUseProgram(m_shader->m_program_id);
         glBindVertexArray(m_vao);
+        glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUniform1f(m_offset_loc, 0.0);
         glUniform1i(m_is_upside_down_loc, GL_TRUE);
         glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
+        m_disparity_sampler.bind(1);
+        glBindTextureUnit(1,m_depth_estimator->get_framebuffer_texture_id());
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindTextureUnit(1,0);
+        m_disparity_sampler.unbind(1);
         glBindVertexArray(0);
         glUseProgram(0);
         m_cube_mesh->draw();
+        glDisable(GL_DEPTH_TEST);
         m_vr->blit_frame_left();
 
         m_vr->bind_right_eye();
