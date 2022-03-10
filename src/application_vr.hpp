@@ -40,6 +40,7 @@ class MainApplication : public Application
     GLuint m_offset_loc;
     GLuint m_transform_loc;
     GLuint m_is_upside_down_loc;
+    GLuint m_is_left_loc;
     arDepthEstimation::Vr *m_vr;
     glm::mat4 m_identity_mat{1.0f};
     DepthEstimator *m_depth_estimator;
@@ -85,6 +86,7 @@ class MainApplication : public Application
         m_offset_loc = glGetUniformLocation(m_shader->m_program_id, "offset");
         m_transform_loc = glGetUniformLocation(m_shader->m_program_id, "transform");
         m_is_upside_down_loc = glGetUniformLocation(m_shader->m_program_id, "is_upside_down");
+        m_is_left_loc = glGetUniformLocation(m_shader->m_program_id, "is_left");
 
         m_vr = new Vr{};
         m_cube_mesh = new Mesh{};
@@ -128,6 +130,7 @@ class MainApplication : public Application
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUniform1f(m_offset_loc, 0.0);
         glUniform1i(m_is_upside_down_loc, GL_TRUE);
+        glUniform1i(m_is_left_loc, GL_TRUE);
         glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
         m_disparity_sampler.bind(1);
         glBindTextureUnit(1,m_depth_estimator->get_framebuffer_texture_id());
@@ -143,11 +146,17 @@ class MainApplication : public Application
         m_vr->bind_right_eye();
         glUseProgram(m_shader->m_program_id);
         glBindVertexArray(m_vao);
+        glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUniform1f(m_offset_loc, 0.5);
         glUniform1i(m_is_upside_down_loc, GL_TRUE);
+        glUniform1i(m_is_left_loc, GL_FALSE);
         glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
+        m_disparity_sampler.bind(1);
+        glBindTextureUnit(1,m_depth_estimator->get_framebuffer_texture_id());
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindTextureUnit(1,0);
+        m_disparity_sampler.unbind(1);
         glBindVertexArray(0);
         glUseProgram(0);
         m_cube_mesh->draw();
