@@ -15,9 +15,9 @@ void main()
     vec2 my_coord = vec2(image_coord.x*0.5+offset, image_coord.y);
     color = vec4(texture(image_sampler,my_coord).rgb, 1.0);
     if(is_left){
-        gl_FragDepth = -0.3+texture(disparity_sampler,disparity_coord).r;
+        gl_FragDepth = -0.01+texture(disparity_sampler,disparity_coord).r;
     }else{
-        gl_FragDepth = -0.3+texture(disparity_sampler,disparity_coord).g;
+        gl_FragDepth = -0.01+texture(disparity_sampler,disparity_coord).g;
     }
 }
  

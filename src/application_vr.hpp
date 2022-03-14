@@ -139,7 +139,7 @@ class MainApplication : public Application
         m_disparity_sampler.unbind(1);
         glBindVertexArray(0);
         glUseProgram(0);
-        m_cube_mesh->draw();
+        m_cube_mesh->draw(m_vr->m_view_to_eye_mat[0],m_window_renderer->m_translation,m_window_renderer->m_scale, m_window_renderer->m_y_rotation_degrees);
         glDisable(GL_DEPTH_TEST);
         m_vr->blit_frame_left();
 
@@ -159,7 +159,8 @@ class MainApplication : public Application
         m_disparity_sampler.unbind(1);
         glBindVertexArray(0);
         glUseProgram(0);
-        m_cube_mesh->draw();
+        m_cube_mesh->draw(m_vr->m_view_to_eye_mat[1],m_window_renderer->m_translation, m_window_renderer->m_scale, m_window_renderer->m_y_rotation_degrees);
+        glDisable(GL_DEPTH_TEST);
         m_vr->blit_frame_right();
 
         glDisable(GL_MULTISAMPLE);

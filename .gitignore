@@ -8,3 +8,4 @@ subprojects/glm*/
 subprojects/imgui*/
 build*/*
 assets/test_data/*
+imgui.ini

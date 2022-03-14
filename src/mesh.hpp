@@ -37,7 +37,7 @@ const GLushort cube_indices[]{
     4, 1, 5, // camera side
     0, 4, 3, // left side
     7, 3, 4, // left side
-    7, 6, 2, // away the camera side
+    2, 6, 7, // away the camera side
     2, 3, 7, // away the camera side
     5, 2, 6, // right side
     5, 1, 2, // right side
@@ -85,20 +85,19 @@ class Mesh
         m_time_start = glfwGetTime();
     }
 
-    void draw()
+    void draw(glm::mat4 vp_matrix, float* translation, float scale, float rot )
     {
-        glm::mat4 mvp_matrix{1.0f};
-        mvp_matrix = glm::scale(mvp_matrix, glm::vec3{0.1});
-        float degrees = std::fmod(((glfwGetTime() - m_time_start) * 10), 360.0);
-        mvp_matrix = glm::rotate(mvp_matrix, glm::radians(degrees), glm::vec3{0.0f, 1.0f, 0.0f});
-        // mvp_matrix = glm::translate(mvp_matrix,glm::vec3{0.0,0.0,0.4});
-        mvp_matrix[3][2] = 0.4;
-        // glDisable(GL_CULL_FACE);
+        glm::mat4 model_matrix = glm::mat4{1.0f};
+        float degrees = rot;//std::fmod(((glfwGetTime() - m_time_start) * 10), 360.0);
+        model_matrix = glm::translate(model_matrix,glm::vec3{translation[0],translation[1],translation[2]});
+        model_matrix = glm::rotate(model_matrix, glm::radians(degrees), glm::vec3{0.0f, 1.0f, 0.0f});
+        model_matrix = glm::scale(model_matrix, glm::vec3{scale});
+        glm::mat4 mvp_matrix = vp_matrix*model_matrix;
+        
         glUseProgram(m_shader->m_program_id);
         glUniformMatrix4fv(m_mvp_loc, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
         glBindVertexArray(m_vao);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void *)(0));
-        // glEnable(GL_CULL_FACE);
         glBindVertexArray(0);
         glUseProgram(0);
     }

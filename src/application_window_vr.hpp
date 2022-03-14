@@ -61,6 +61,10 @@ class WindowRenderer
 
 
   public:
+    float m_translation[3] = {-0.1,0.0,-0.5};
+    float m_scale = 0.2;
+    float m_y_rotation_degrees = 45.0;
+
     void add_framebuffer_texture(std::string name, GLuint texture_id, bool is_upside_down=false){
         m_framebuffer_textures.emplace_back(name,texture_id,is_upside_down);
     }
@@ -110,6 +114,10 @@ class WindowRenderer
             }
         }
         ImGui::EndListBox();
+
+        ImGui::SliderFloat3("position", m_translation, -10.0, 0.0);
+        ImGui::SliderFloat("scale", &m_scale, 0.0, 2.0);
+        ImGui::SliderFloat("y rotation in degrees", &m_y_rotation_degrees, 0.0, 360.0);
         ImGui::End();
     }
 

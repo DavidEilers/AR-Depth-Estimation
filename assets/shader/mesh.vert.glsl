@@ -7,6 +7,6 @@ out float depth;
 void main()
 {
     vec4 pos = mvp * vec4(vPos, 1.0);
-    depth = pos.z;
+    depth = pos.z/pos.w;
     gl_Position = pos;
 }
