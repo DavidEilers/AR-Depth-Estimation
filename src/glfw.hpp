@@ -76,6 +76,7 @@ class ContextManager
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        //glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
 #define DEBUG_GL
 #ifdef DEBUG_GL

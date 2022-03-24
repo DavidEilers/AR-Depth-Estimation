@@ -39,6 +39,10 @@ class MainApplication : public Application
     Mesh *m_cube_mesh;
     GLuint m_offset_loc;
     GLuint m_transform_loc;
+    GLuint m_cam_proj_loc;
+    GLuint m_eye_unproj_loc;
+    GLuint m_eye_to_cam_loc;
+    GLuint m_hmd_to_cam_loc;
     GLuint m_is_upside_down_loc;
     GLuint m_is_left_loc;
     arDepthEstimation::Vr *m_vr;
@@ -85,6 +89,10 @@ class MainApplication : public Application
 
         m_offset_loc = glGetUniformLocation(m_shader->m_program_id, "offset");
         m_transform_loc = glGetUniformLocation(m_shader->m_program_id, "transform");
+        m_cam_proj_loc = glGetUniformLocation(m_shader->m_program_id, "cam_proj");
+        m_eye_unproj_loc = glGetUniformLocation(m_shader->m_program_id, "eye_unproj");
+        m_eye_to_cam_loc = glGetUniformLocation(m_shader->m_program_id, "eye_to_cam");
+        m_hmd_to_cam_loc = glGetUniformLocation(m_shader->m_program_id, "hmd_to_cam");
         m_is_upside_down_loc = glGetUniformLocation(m_shader->m_program_id, "is_upside_down");
         m_is_left_loc = glGetUniformLocation(m_shader->m_program_id, "is_left");
 
@@ -129,9 +137,12 @@ class MainApplication : public Application
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUniform1f(m_offset_loc, 0.0);
-        glUniform1i(m_is_upside_down_loc, GL_TRUE);
+        glUniform1i(m_is_upside_down_loc, GL_FALSE);
         glUniform1i(m_is_left_loc, GL_TRUE);
-        glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
+        glUniformMatrix4fv(m_cam_proj_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_cam_proj_mat[0]));
+        glUniformMatrix4fv(m_eye_unproj_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_eye_unproj[0]));
+        glUniformMatrix4fv(m_eye_to_cam_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_eye_to_cam_mat[0]));
+        glUniformMatrix4fv(m_hmd_to_cam_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_hmd_to_cam[0]));
         m_disparity_sampler.bind(1);
         glBindTextureUnit(1,m_depth_estimator->get_framebuffer_texture_id());
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -139,6 +150,7 @@ class MainApplication : public Application
         m_disparity_sampler.unbind(1);
         glBindVertexArray(0);
         glUseProgram(0);
+        glClear(GL_DEPTH_BUFFER_BIT);
         m_cube_mesh->draw(m_vr->m_view_to_eye_mat[0],m_window_renderer->m_translation,m_window_renderer->m_scale, m_window_renderer->m_y_rotation_degrees);
         glDisable(GL_DEPTH_TEST);
         m_vr->blit_frame_left();
@@ -149,9 +161,12 @@ class MainApplication : public Application
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUniform1f(m_offset_loc, 0.5);
-        glUniform1i(m_is_upside_down_loc, GL_TRUE);
+        glUniform1i(m_is_upside_down_loc, GL_FALSE);
         glUniform1i(m_is_left_loc, GL_FALSE);
-        glUniformMatrix4fv(m_transform_loc, 1, GL_FALSE, glm::value_ptr(m_identity_mat));
+        glUniformMatrix4fv(m_cam_proj_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_cam_proj_mat[1]));
+        glUniformMatrix4fv(m_eye_unproj_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_eye_unproj[1]));
+        glUniformMatrix4fv(m_eye_to_cam_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_eye_to_cam_mat[1]));
+        glUniformMatrix4fv(m_hmd_to_cam_loc, 1, GL_FALSE, glm::value_ptr(m_vr->m_hmd_to_cam[1]));
         m_disparity_sampler.bind(1);
         glBindTextureUnit(1,m_depth_estimator->get_framebuffer_texture_id());
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -159,6 +174,7 @@ class MainApplication : public Application
         m_disparity_sampler.unbind(1);
         glBindVertexArray(0);
         glUseProgram(0);
+        glClear(GL_DEPTH_BUFFER_BIT);
         m_cube_mesh->draw(m_vr->m_view_to_eye_mat[1],m_window_renderer->m_translation, m_window_renderer->m_scale, m_window_renderer->m_y_rotation_degrees);
         glDisable(GL_DEPTH_TEST);
         m_vr->blit_frame_right();
