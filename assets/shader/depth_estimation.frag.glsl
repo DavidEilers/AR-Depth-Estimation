@@ -180,9 +180,9 @@ vec2 get_texel_size(){
 
 float sum_of_absolute_differences(int ring_buff_mid, mat3 ring_buffer_luminance_right, mat3 luminance_left){
     return
-        dot( abs(luminance_left[1]-ring_buffer_luminance_right[(0+ring_buff_mid)%3]), vec3(1,1,1)) +
-        dot( abs(luminance_left[2]-ring_buffer_luminance_right[(1+ring_buff_mid)%3]), vec3(1,1,1)) +
-        dot( abs(luminance_left[0]-ring_buffer_luminance_right[(2+ring_buff_mid)%3]), vec3(1,1,1));
+        dot( abs(abs(luminance_left[1])-abs(ring_buffer_luminance_right[(0+ring_buff_mid)%3])), vec3(1,1,1)) +
+        dot( abs(abs(luminance_left[2])-abs(ring_buffer_luminance_right[(1+ring_buff_mid)%3])), vec3(1,1,1)) +
+        dot( abs(abs(luminance_left[0])-abs(ring_buffer_luminance_right[(2+ring_buff_mid)%3])), vec3(1,1,1));
 }
 
 mat3 luminance_33(sampler2D sampler_obj, vec2 coord){
@@ -249,9 +249,9 @@ float calc_disparity_right_left(sampler2D image_left, sampler2D image_right, vec
     fill_buff(ring_buffer_texel_fetch,1,left_eye_sampler,pos_left+vec2(0,0));
     int ring_buffer_mid = 1;
     for(; pos_left.x > min_x_pos ; pos_left.x--){
-        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid-1)%3,left_eye_sampler,pos_left+vec2(-1,0));
+        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+2)%3,left_eye_sampler,pos_left+vec2(-1,0));
         float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_right);
-        ring_buffer_mid = int(ring_buffer_mid-1)%3;
+        ring_buffer_mid = int(ring_buffer_mid+2)%3;
         if(tmp<0.1){
             float x_offset = (pos_right.x-pos_left.x)*texel_size.x;
             return x_offset;
