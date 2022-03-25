@@ -77,12 +77,14 @@ void main()
     vec2 my_coord = clamp(coord,vec2(0,0),vec2(1,1));;
     if(is_left){
         my_coord = get_coord_left(coord);
-        gl_FragDepth = -0.01+texture(disparity_sampler,my_coord).r;
+        coord.y = 1- coord.y;
+        gl_FragDepth = clamp(texture(disparity_sampler,coord).r,0.0,0.99);
     }else{
         //coord.x = coord.x+(0.007639*20);
         //coord.y = coord.y+(0.009016*2);
         my_coord = get_coord_right(coord);
-        gl_FragDepth = -0.01+texture(disparity_sampler,my_coord).g;
+        coord.y = 1- coord.y;
+        gl_FragDepth = clamp(texture(disparity_sampler,coord).g,0.0,0.99);
     }
     
     color = vec4(texture(image_sampler,my_coord).rgb, 1.0);
