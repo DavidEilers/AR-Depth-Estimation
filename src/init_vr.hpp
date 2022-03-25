@@ -29,7 +29,8 @@ class Vr
 
   public:
     arDepthEstimation::Texture *m_texture;
-    glm::mat4 m_eye_to_cam_mat[2];
+    glm::mat4 m_eye_to_cam_left_mat[2];
+    glm::mat4 m_eye_to_cam_right_mat[2];
     glm::mat4 m_eye_unproj[2];
     glm::mat4 m_hmd_to_cam[2];
     glm::mat4 m_view_to_eye_mat[2];
@@ -195,8 +196,10 @@ class Vr
         //eye_to_head_transform[1]*camera_to_head_mat[1]
         m_cam_proj_mat[0]= camera_projection[0];
         m_cam_proj_mat[1]= camera_projection[1];
-        m_eye_to_cam_mat[0] = glm::inverse(camera_to_head_mat[0])*eye_to_head_transform[0];
-        m_eye_to_cam_mat[1] = glm::inverse(camera_to_head_mat[1])*eye_to_head_transform[1];
+        m_eye_to_cam_left_mat[0] = glm::inverse(camera_to_head_mat[0])*eye_to_head_transform[0];
+        m_eye_to_cam_left_mat[1] = glm::inverse(camera_to_head_mat[1])*eye_to_head_transform[0];
+        m_eye_to_cam_right_mat[0] = glm::inverse(camera_to_head_mat[0])*eye_to_head_transform[1];
+        m_eye_to_cam_right_mat[1] = glm::inverse(camera_to_head_mat[1])*eye_to_head_transform[1];
 
         //m_cam_to_eye_mat[0] = (glm::inverse(camera_projection[0])) * camera_to_head_mat[0] *
         //                      (glm::inverse(eye_to_head_transform[0])) * eye_proj[0];

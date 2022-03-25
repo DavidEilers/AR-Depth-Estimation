@@ -226,7 +226,7 @@ float calc_disparity_left_right(sampler2D image_left, sampler2D image_right, vec
         float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_left);
         ring_buffer_mid = int(ring_buffer_mid+1)%3;
         if(tmp<0.1){
-            float x_offset = (pos_right.x-pos_left.x)*texel_size.x;
+            float x_offset = abs(pos_right.x-pos_left.x)*texel_size.x;
             return x_offset;
         }
     }
@@ -253,7 +253,7 @@ float calc_disparity_right_left(sampler2D image_left, sampler2D image_right, vec
         float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_right);
         ring_buffer_mid = int(ring_buffer_mid+2)%3;
         if(tmp<0.1){
-            float x_offset = (pos_right.x-pos_left.x)*texel_size.x;
+            float x_offset = abs(pos_right.x-pos_left.x)*texel_size.x;
             return x_offset;
         }
     }
@@ -356,7 +356,7 @@ void main()
     //test = vec3(0,eigen_values.y*-1,0.0);
     //vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
    
-    vec3 final_color= vec3(1-calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),1-calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
+    vec3 final_color= vec3(calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
     //vec3 final_color= vec3(1-calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     //vec3 final_color= vec3(1-calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     //final_color = final_color*5;

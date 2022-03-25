@@ -8,7 +8,8 @@ layout (binding = 0) uniform sampler2D image_sampler;
 layout (binding = 1) uniform sampler2D disparity_sampler;
 uniform mat4 transform;
 uniform mat4 eye_unproj;
-uniform mat4 eye_to_cam;
+uniform mat4 eye_to_left_cam;
+uniform mat4 eye_to_right_cam;
 uniform mat4 cam_proj;
 uniform mat4 cam_unproj;
 uniform mat4 hmd_to_cam;
@@ -23,11 +24,12 @@ out float gl_FragDepth;
     return transform*vec4(unproj_pos.xyz, 1.0);
 }*/
 
-vec4 eye_nds_to_cam_nds(){
+vec4 eye_nds_to_cam_nds(bool left_cam){
     vec4 unproj_pos = eye_unproj* vec4(image_coord,1.0,1.0);
     unproj_pos.z = -1;
     unproj_pos.w = 1;
     //vec4 unproj_pos = vec4(image_coord,-2.5,1.0);
+    mat4 eye_to_cam = left_cam ? eye_to_left_cam: eye_to_right_cam;
     vec4 eye_nds = cam_proj*eye_to_cam*vec4(unproj_pos.xyzw);
     eye_nds = eye_nds/eye_nds.w;
     return eye_nds;
@@ -64,8 +66,9 @@ void main()
     unproj_pos.z = -unproj_pos.z;
     gl_Position =  transform*vec4(unproj_pos.xyz, 1.0);*/
 
-
-    vec2 coord = nds_to_0_1(eye_nds_to_cam_nds());//(unproj().xy+1.0)/2;//nds_to_0_1(unproj());//,vec2(0.0,0.0),vec2(2.0,1.0));
+    vec2 coord_left_cam = nds_to_0_1(eye_nds_to_cam_nds(true));
+    vec2 coord_right_cam = nds_to_0_1(eye_nds_to_cam_nds(false));
+    vec2 coord = is_left ? coord_left_cam : coord_right_cam;//(unproj().xy+1.0)/2;//nds_to_0_1(unproj());//,vec2(0.0,0.0),vec2(2.0,1.0));
     //coord.y = 1-coord.y;
     //coord = coord + vec2(-1.0,-1.0);
     //coord = coord * vec2((108.0/112.0), 109.16/112.0);
@@ -77,16 +80,20 @@ void main()
     vec2 my_coord = clamp(coord,vec2(0,0),vec2(1,1));;
     if(is_left){
         my_coord = get_coord_left(coord);
-        coord.y = 1- coord.y;
-        gl_FragDepth = clamp(texture(disparity_sampler,coord).r,0.0,0.99);
+        //coord.y = 1- coord.y;
+        //gl_FragDepth = clamp(texture(disparity_sampler,coord).r,0.0,0.99);
     }else{
         //coord.x = coord.x+(0.007639*20);
         //coord.y = coord.y+(0.009016*2);
         my_coord = get_coord_right(coord);
-        coord.y = 1- coord.y;
-        gl_FragDepth = clamp(texture(disparity_sampler,coord).g,0.0,0.99);
+        //coord.y = 1- coord.y;
+        //gl_FragDepth = clamp(texture(disparity_sampler,coord).g,0.0,0.99);
     }
-    
+    coord_left_cam.y = 1-coord_left_cam.y;
+    coord_right_cam.y = 1-coord_right_cam.y;
+    float depth = (texture(disparity_sampler,coord_left_cam).r + texture(disparity_sampler,coord_left_cam).g)/2.0;
+    gl_FragDepth = clamp(1- depth,0.0,0.99);
+    //color = vec4(vec3(1-depth),1.0);
     color = vec4(texture(image_sampler,my_coord).rgb, 1.0);
 
 
