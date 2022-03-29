@@ -5,6 +5,7 @@ in vec2 image_coord;
 layout (binding = 0) uniform sampler2D left_eye_sampler;
 layout (binding = 1) uniform sampler2D right_eye_sampler;
 uniform ivec2 texture_size;
+uniform bool is_RGB = false;
 out vec4 color;
 
 
@@ -260,6 +261,163 @@ float calc_disparity_right_left(sampler2D image_left, sampler2D image_right, vec
     return 0.0; //nothing found => maximum disparity
 }
 
+void red_fill_buff(in out mat3 buff, int row, sampler2D sampler_obj, vec2 pixel_coord){
+    vec2 texel_size = get_texel_size();
+    vec2 coord = pixel_coord*texel_size;
+    buff[row][0] = texture(sampler_obj,coord+vec2(0,-1)*texel_size).r;
+    buff[row][1] = texture(sampler_obj,coord+vec2(0,0)*texel_size).r;
+    buff[row][2] = texture(sampler_obj,coord+vec2(0,1)*texel_size).r;
+}
+
+void green_fill_buff(in out mat3 buff, int row, sampler2D sampler_obj, vec2 pixel_coord){
+    vec2 texel_size = get_texel_size();
+    vec2 coord = pixel_coord*texel_size;
+    buff[row][0] = texture(sampler_obj,coord+vec2(0,-1)*texel_size).g;
+    buff[row][1] = texture(sampler_obj,coord+vec2(0,0)*texel_size).g;
+    buff[row][2] = texture(sampler_obj,coord+vec2(0,1)*texel_size).g;
+}
+
+void blue_fill_buff(in out mat3 buff, int row, sampler2D sampler_obj, vec2 pixel_coord){
+    vec2 texel_size = get_texel_size();
+    vec2 coord = pixel_coord*texel_size;
+    buff[row][0] = texture(sampler_obj,coord+vec2(0,-1)*texel_size).b;
+    buff[row][1] = texture(sampler_obj,coord+vec2(0,0)*texel_size).b;
+    buff[row][2] = texture(sampler_obj,coord+vec2(0,1)*texel_size).b;
+}
+
+mat3 red_sampling_33(sampler2D sampler_obj, vec2 coord){
+    vec2 texel_size = get_texel_size();
+    mat3 luminance;
+    vec2 filter_pixel_offset;
+    vec2 filter_offset;
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            filter_pixel_offset = vec2(i-1,j-1);
+            filter_offset = filter_pixel_offset*texel_size;
+            luminance[i][j] = texture(sampler_obj,coord+filter_offset).r;
+        }
+    }
+    return luminance;
+}
+
+mat3 green_sampling_33(sampler2D sampler_obj, vec2 coord){
+    vec2 texel_size = get_texel_size();
+    mat3 luminance;
+    vec2 filter_pixel_offset;
+    vec2 filter_offset;
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            filter_pixel_offset = vec2(i-1,j-1);
+            filter_offset = filter_pixel_offset*texel_size;
+            luminance[i][j] = texture(sampler_obj,coord+filter_offset).g;
+        }
+    }
+    return luminance;
+}
+
+mat3 blue_sampling_33(sampler2D sampler_obj, vec2 coord){
+    vec2 texel_size = get_texel_size();
+    mat3 luminance;
+    vec2 filter_pixel_offset;
+    vec2 filter_offset;
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            filter_pixel_offset = vec2(i-1,j-1);
+            filter_offset = filter_pixel_offset*texel_size;
+            luminance[i][j] = texture(sampler_obj,coord+filter_offset).b;
+        }
+    }
+    return luminance;
+}
+
+
+float calc_disparity_left_right_RGB(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
+    vec2 texel_size = get_texel_size();
+    vec2 pos_left = coord/texel_size;
+    //float result = 100;
+    int max_x_distance= int(size.x*0.6);
+    if(pos_left.x + max_x_distance < size.x){
+        size.x = int(pos_left.x + max_x_distance);
+    }
+    mat3 red_left = red_sampling_33(image_left,coord);
+    mat3 green_left = green_sampling_33(image_left,coord);
+    mat3 blue_left = blue_sampling_33(image_left,coord);
+    mat3 red_ring_buffer_texel_fetch;
+    mat3 green_ring_buffer_texel_fetch;
+    mat3 blue_ring_buffer_texel_fetch;
+    red_fill_buff(red_ring_buffer_texel_fetch,0,right_eye_sampler,pos_left+vec2(-1,0));
+    red_fill_buff(red_ring_buffer_texel_fetch,1,right_eye_sampler,pos_left+vec2(0,0));
+    green_fill_buff(green_ring_buffer_texel_fetch,0,right_eye_sampler,pos_left+vec2(-1,0));
+    green_fill_buff(green_ring_buffer_texel_fetch,1,right_eye_sampler,pos_left+vec2(0,0));
+    blue_fill_buff(blue_ring_buffer_texel_fetch,0,right_eye_sampler,pos_left+vec2(-1,0));
+    blue_fill_buff(blue_ring_buffer_texel_fetch,1,right_eye_sampler,pos_left+vec2(0,0));
+    int ring_buffer_mid = 1;
+    for(vec2 pos_right = pos_left; pos_right.x <=size.x; pos_right.x++){
+        red_fill_buff(red_ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
+        green_fill_buff(green_ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
+        blue_fill_buff(blue_ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
+        vec3 tmp = vec3( 
+                        sum_of_absolute_differences(ring_buffer_mid, red_ring_buffer_texel_fetch, red_left),
+                        sum_of_absolute_differences(ring_buffer_mid, green_ring_buffer_texel_fetch, green_left),
+                        sum_of_absolute_differences(ring_buffer_mid, blue_ring_buffer_texel_fetch, blue_left)
+                    );
+        float minimum = min(min(tmp.r,tmp.g),tmp.b);
+        ring_buffer_mid = int(ring_buffer_mid+1)%3;
+        if(minimum<0.1){
+            float x_offset = abs(pos_right.x-pos_left.x)*texel_size.x;
+            return x_offset;
+        }
+    }
+    return 0.0; //nothing found => maximum disparity
+}
+
+float calc_disparity_right_left_RGB(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
+    vec2 texel_size = get_texel_size();
+    vec2 pos_right = coord/texel_size;
+    vec2 pos_left = pos_right;
+    //float result = 100;
+    int max_x_distance= int(size.x*0.7);
+    int min_x_pos = 0;
+    if(pos_right.x - max_x_distance > 0){
+        min_x_pos = int(pos_right.x - max_x_distance);
+    }
+    mat3 red_right = red_sampling_33(image_right,coord);
+    mat3 green_right = green_sampling_33(image_right,coord);
+    mat3 blue_right = blue_sampling_33(image_right,coord);
+    mat3 red_ring_buffer_texel_fetch;
+    mat3 green_ring_buffer_texel_fetch;
+    mat3 blue_ring_buffer_texel_fetch;
+    red_fill_buff(red_ring_buffer_texel_fetch,2,left_eye_sampler,pos_left+vec2(1,0));
+    red_fill_buff(red_ring_buffer_texel_fetch,1,left_eye_sampler,pos_left+vec2(0,0));
+    green_fill_buff(green_ring_buffer_texel_fetch,2,left_eye_sampler,pos_left+vec2(1,0));
+    green_fill_buff(green_ring_buffer_texel_fetch,1,left_eye_sampler,pos_left+vec2(0,0));
+    blue_fill_buff(blue_ring_buffer_texel_fetch,2,left_eye_sampler,pos_left+vec2(1,0));
+    blue_fill_buff(blue_ring_buffer_texel_fetch,1,left_eye_sampler,pos_left+vec2(0,0));
+    mat3 ring_buffer_texel_fetch;
+    fill_buff(ring_buffer_texel_fetch,2,left_eye_sampler,pos_left+vec2(1,0));
+    fill_buff(ring_buffer_texel_fetch,1,left_eye_sampler,pos_left+vec2(0,0));
+    int ring_buffer_mid = 1;
+    for(; pos_left.x > min_x_pos ; pos_left.x--){
+        red_fill_buff(red_ring_buffer_texel_fetch,int(ring_buffer_mid+2)%3,left_eye_sampler,pos_left+vec2(-1,0));
+        green_fill_buff(green_ring_buffer_texel_fetch,int(ring_buffer_mid+2)%3,left_eye_sampler,pos_left+vec2(-1,0));
+        blue_fill_buff(blue_ring_buffer_texel_fetch,int(ring_buffer_mid+2)%3,left_eye_sampler,pos_left+vec2(-1,0));
+        vec3 tmp = vec3(
+                        sum_of_absolute_differences(ring_buffer_mid, red_ring_buffer_texel_fetch, red_right),
+                        sum_of_absolute_differences(ring_buffer_mid, green_ring_buffer_texel_fetch, green_right),
+                        sum_of_absolute_differences(ring_buffer_mid, blue_ring_buffer_texel_fetch, blue_right)
+                    );
+        float minimum = min(min(tmp.r,tmp.g),tmp.b);
+        ring_buffer_mid = int(ring_buffer_mid+2)%3;
+        if(minimum<0.1){
+            float x_offset = abs(pos_right.x-pos_left.x)*texel_size.x;
+            return x_offset;
+        }
+    }
+    return 0.0; //nothing found => maximum disparity
+}
+
+
+
 
 void main()
 {
@@ -355,8 +513,12 @@ void main()
     }*/
     //test = vec3(0,eigen_values.y*-1,0.0);
     //vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
-   
-    vec3 final_color= vec3(calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
+    vec3 final_color;
+    if(is_RGB == true){
+        final_color = vec3(calc_disparity_left_right_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
+    }else{
+        final_color= vec3(calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
+    }
     //vec3 final_color= vec3(1-calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     //vec3 final_color= vec3(1-calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     //final_color = final_color*5;
