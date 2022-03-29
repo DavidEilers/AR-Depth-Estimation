@@ -81,7 +81,9 @@ class Downscaler
     GLuint m_is_single_texture_loc;
     GLuint m_gamma_loc;
     GLuint m_is_upside_down_loc;
+    GLuint m_is_rgb_loc;
     bool m_is_single_texture;
+    bool m_is_rgb;
 
     void inline create_shader()
     {
@@ -98,6 +100,7 @@ class Downscaler
         m_is_single_texture_loc = glGetUniformLocation(m_shader->m_program_id, "is_single_texture");
         m_gamma_loc = glGetUniformLocation(m_shader->m_program_id, "gamma");
         m_is_upside_down_loc = glGetUniformLocation(m_shader->m_program_id, "is_upside_down");
+        m_is_rgb_loc = glGetUniformLocation(m_shader->m_program_id, "is_rgb");
 
         logger_info << "texture size Loc = " << m_texture_size_loc;
     }
@@ -131,10 +134,10 @@ class Downscaler
 
   public:
     Downscaler(int input_width, int input_height, int output_width, int output_height, bool is_single_texture,
-               float gamma = 1.0, bool is_upside_down = false)
+               float gamma = 1.0, bool is_upside_down = false, bool is_rgb = false)
         : m_input_width{input_width}, m_input_height{input_height}, m_output_width{output_width},
           m_output_height{output_height}, m_is_single_texture{is_single_texture}, m_gamma{gamma}, m_is_upside_down{
-                                                                                                      is_upside_down}
+                                                                                                      is_upside_down}, m_is_rgb{is_rgb}
     {
         m_per_eye_output_height = m_output_height;
         if (m_is_single_texture)
@@ -173,6 +176,7 @@ class Downscaler
         glUniform2i(m_texture_size_loc, m_input_width, m_input_height);
         glUniform1i(m_is_single_texture_loc, GL_FALSE);
         glUniform1i(m_is_upside_down_loc, m_is_upside_down ? (GL_TRUE) : (GL_FALSE));
+        glUniform1i(m_is_rgb_loc, m_is_rgb ? (GL_TRUE) : (GL_FALSE));
         glUniform1f(m_gamma_loc, m_gamma);
         glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_id);
         glViewport(0, 0, m_per_eye_output_width, m_per_eye_output_height);

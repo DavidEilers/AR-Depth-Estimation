@@ -102,7 +102,7 @@ class MainApplication : public Application
         m_cube_mesh = new Mesh{};
         int camera_feed_width = m_vr->m_texture->get_width();
         int camera_feed_height = m_vr->m_texture->get_height();
-        m_depth_estimator = new DepthEstimator{camera_feed_width, camera_feed_height,true, 1.6, true};
+        m_depth_estimator = new DepthEstimator{camera_feed_width, camera_feed_height,true, 1.6, true, true};
         m_sampler.initialize_sampler();
         m_disparity_sampler.initialize_sampler();
         m_window_renderer = new WindowRenderer{0,m_depth_estimator->get_framebuffer_texture_id()};

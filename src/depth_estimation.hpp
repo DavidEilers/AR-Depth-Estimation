@@ -30,6 +30,7 @@ class DepthEstimator
     int m_input_height;
     int m_output_width;
     int m_output_height;
+    bool m_is_rgb;
     GLuint m_framebuffer_id;
     GLuint m_framebuffer_texture_id;
     Downscaler *m_downscaler;
@@ -64,6 +65,7 @@ class DepthEstimator
     LinearSampler m_sampler_left_eye{};
     LinearSampler m_sampler_right_eye{};
     GLuint m_texture_size_loc;
+    GLuint m_is_rgb_loc;
 
     void inline create_shader()
     {
@@ -77,6 +79,7 @@ class DepthEstimator
         m_sampler_right_eye.initialize_sampler();
 
         m_texture_size_loc = glGetUniformLocation(m_shader->m_program_id, "texture_size");
+        m_is_rgb_loc = glGetUniformLocation(m_shader->m_program_id, "is_rgb");
 
         logger_info << "texture size Loc = " << m_texture_size_loc;
     }
@@ -110,9 +113,9 @@ class DepthEstimator
 
   public:
     DepthEstimator(int input_width, int input_height, bool is_single_texture, float gamma = 1.0,
-                   bool is_upside_down = false)
+                   bool is_upside_down = false, bool is_rgb = false)
         : m_input_width{input_width}, m_input_height{input_height}, m_output_width{input_width / 4},
-          m_output_height{input_height / 4}
+          m_output_height{input_height / 4}, m_is_rgb{is_rgb}
     {
         create_framebuffer();
         create_shader();
@@ -121,7 +124,7 @@ class DepthEstimator
                     << m_output_height;
         m_downscaler = new Downscaler{m_input_width / 2, m_input_height / 2, m_output_width,
                                       m_output_height,   is_single_texture,  gamma,
-                                      is_upside_down};
+                                      is_upside_down, is_rgb};
     }
 
     ~DepthEstimator()
@@ -144,6 +147,7 @@ class DepthEstimator
         GLuint texture_right = m_downscaler->get_framebuffer_right_texture_id();
         glUseProgram(m_shader->m_program_id);
         glUniform2i(m_texture_size_loc, m_output_width, m_output_height);
+        glUniform1i(m_is_rgb_loc, m_is_rgb ? (GL_TRUE) : (GL_FALSE));
         glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_id);
         glViewport(0, 0, m_output_width, m_output_height);
         // glClear(GL_COLOR_BUFFER_BIT);

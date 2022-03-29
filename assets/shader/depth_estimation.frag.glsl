@@ -5,7 +5,7 @@ in vec2 image_coord;
 layout (binding = 0) uniform sampler2D left_eye_sampler;
 layout (binding = 1) uniform sampler2D right_eye_sampler;
 uniform ivec2 texture_size;
-uniform bool is_RGB = false;
+uniform bool is_rgb = false;
 out vec4 color;
 
 
@@ -514,7 +514,7 @@ void main()
     //test = vec3(0,eigen_values.y*-1,0.0);
     //vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
     vec3 final_color;
-    if(is_RGB == true){
+    if(is_rgb == true){
         final_color = vec3(calc_disparity_left_right_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
     }else{
         final_color= vec3(calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
