@@ -231,7 +231,7 @@ float calc_disparity_left_right(sampler2D image_left, sampler2D image_right, vec
             return x_offset;
         }
     }
-    return 0.0; //nothing found => maximum disparity
+    return 1.0; //nothing found => maximum disparity
 }
 
 float calc_disparity_right_left(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
@@ -258,7 +258,7 @@ float calc_disparity_right_left(sampler2D image_left, sampler2D image_right, vec
             return x_offset;
         }
     }
-    return 0.0; //nothing found => maximum disparity
+    return 1.0; //nothing found => maximum disparity
 }
 
 void red_fill_buff(in out mat3 buff, int row, sampler2D sampler_obj, vec2 pixel_coord){
@@ -368,7 +368,7 @@ float calc_disparity_left_right_RGB(sampler2D image_left, sampler2D image_right,
             return x_offset;
         }
     }
-    return 0.0; //nothing found => maximum disparity
+    return 1.0; //nothing found => maximum disparity
 }
 
 float calc_disparity_right_left_RGB(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
@@ -413,7 +413,7 @@ float calc_disparity_right_left_RGB(sampler2D image_left, sampler2D image_right,
             return x_offset;
         }
     }
-    return 0.0; //nothing found => maximum disparity
+    return 1.0; //nothing found => maximum disparity
 }
 
 
@@ -518,6 +518,8 @@ void main()
         final_color = vec3(calc_disparity_left_right_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
     }else{
         final_color= vec3(calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
+        //float left_disp = calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size);
+        //final_color = vec3(left_disp);
     }
     //vec3 final_color= vec3(1-calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     //vec3 final_color= vec3(1-calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size));

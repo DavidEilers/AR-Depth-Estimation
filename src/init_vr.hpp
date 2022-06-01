@@ -103,7 +103,7 @@ class Vr
     void update_texture()
     {
         vr::EVRTrackedCameraError nCameraError = m_pVRTrackedCamera->GetVideoStreamFrameBuffer(
-            m_hTrackedCamera, vr::VRTrackedCameraFrameType_Distorted, m_framebuffer_data, m_framebuffer_data_size,
+            m_hTrackedCamera, vr::VRTrackedCameraFrameType_Undistorted, m_framebuffer_data, m_framebuffer_data_size,
             &m_frameHeader, sizeof(m_frameHeader));
         if (nCameraError != vr::VRTrackedCameraError_None)
         {

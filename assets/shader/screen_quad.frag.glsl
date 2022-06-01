@@ -91,8 +91,16 @@ void main()
     }
     coord_left_cam.y = 1-coord_left_cam.y;
     coord_right_cam.y = 1-coord_right_cam.y;
-    float depth = (texture(disparity_sampler,coord_left_cam).r + texture(disparity_sampler,coord_left_cam).g)/2.0;
-    gl_FragDepth = clamp(1- depth,0.0,0.99);
+    //float depth = (texture(disparity_sampler,coord_left_cam).r/2.0 + texture(disparity_sampler,coord_left_cam).g)/2.0;
+    float depth = texture(disparity_sampler,coord_left_cam).r;
+    const float focal_length_in_mm = 0.12;
+    const float camera_dinstance_in_mm = 1400;
+    const float pixel_size = 0.037;
+    float far_in_mm = 30000; 
+    depth = (focal_length_in_mm*camera_dinstance_in_mm)/(depth*pixel_size);
+    float depth_in_mm = clamp(depth,0.0,far_in_mm);
+    depth = (depth_in_mm/far_in_mm);
+    gl_FragDepth = clamp(depth,0.0,0.99);
     //color = vec4(vec3(1-depth),1.0);
     color = vec4(texture(image_sampler,my_coord).rgb, 1.0);
 
