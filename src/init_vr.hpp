@@ -121,14 +121,19 @@ class Vr
 
     void update_texture()
     {
-        vr::EVRTrackedCameraError nCameraError = m_pVRTrackedCamera->GetVideoStreamFrameBuffer(
+        /*vr::EVRTrackedCameraError nCameraError = m_pVRTrackedCamera->GetVideoStreamFrameBuffer(
             m_hTrackedCamera, vr::VRTrackedCameraFrameType_Undistorted, m_framebuffer_data, m_framebuffer_data_size,
+            &m_frameHeader, sizeof(m_frameHeader));
+        */
+        vr::EVRTrackedCameraError nCameraError = m_pVRTrackedCamera->GetVideoStreamTextureGL(
+            m_hTrackedCamera, vr::VRTrackedCameraFrameType_Distorted, &(m_texture->m_texture_id),
             &m_frameHeader, sizeof(m_frameHeader));
         if (nCameraError != vr::VRTrackedCameraError_None)
         {
             throw std::runtime_error("update texture: VRTrackedCameraError");
         }
-        m_texture->upload_texture(m_framebuffer_data);
+        //m_texture->set_texture_id(texture_id);
+        //m_texture->upload_texture(m_framebuffer_data);
     }
 
     void start_frame()

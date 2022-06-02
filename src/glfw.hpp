@@ -127,6 +127,8 @@ void run_app(Application *app)
     double frame_time = 0;
     double prev_print_time = glfwGetTime();
     double frame_time_avg = 0;
+    double frame_time_min = 10000;
+    double frame_time_max = 0;
     constexpr double timer_print_threshold = 5.0; // Every 5 seconds
     while (m_context->should_window_close() == false)
     {
@@ -143,12 +145,16 @@ void run_app(Application *app)
 
         time_frame_finish = glfwGetTime();
         frame_time = time_frame_finish - time_frame_start;
+        if(frame_time < frame_time_min) frame_time_min = frame_time;
+        if(frame_time_max < frame_time) frame_time_max = frame_time;
         frame_time_avg = (frame_time_avg + frame_time) / 2.0;
         if (time_frame_finish - prev_print_time > timer_print_threshold)
         {
-            logger_info << "frametime:" << frame_time_avg;
+            logger_info << "frametime min, avg, max:" << frame_time_min*1000 << frame_time_avg*1000 << frame_time_max*1000;
             prev_print_time = time_frame_finish;
             frame_time_avg = frame_time;
+            frame_time_min = 10000;
+            frame_time_max = 0;
         }
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         ImGui::Render();

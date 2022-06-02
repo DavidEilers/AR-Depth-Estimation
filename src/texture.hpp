@@ -12,7 +12,7 @@ namespace arDepthEstimation
 
 class Texture
 {
-    GLuint m_texture_id;
+    
     const size_t m_width;
     const size_t m_height;
     const GLenum m_pixel_format;
@@ -21,6 +21,7 @@ class Texture
     GLint m_sampler_position;
 
   public:
+    GLuint m_texture_id;
     size_t get_width()
     {
         return m_width;
