@@ -1,0 +1,26 @@
+{
+    "bindings":{
+        "/actions/ar":{
+            "poses" : [ 
+                {
+                "output" : "/actions/ar/in/hand_right",
+                "path" : "/user/hand/right/pose/raw"
+                }
+            ],
+            "sources": [
+                {
+                    "inputs": {
+                        "click": {
+                            "output" : "/actions/ar/in/set_cube"
+                        }
+                    },
+                    "mode" : "button",
+                    "path" : "/user/hand/right/input/trigger"
+                }
+            ]
+        }
+    },
+    "controller_type" : "knuckles",
+    "description": "Binding for the ar depth estimation sample for the knuckles controller",
+    "name": "ar depth estimation for the knuckles controller"
+}

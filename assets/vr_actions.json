@@ -1,0 +1,29 @@
+{
+"default_bindings": [
+    {
+        "controller_type":"knuckles",
+        "binding_url" : "controller_binding_knuckles.json"
+    },
+    {
+        "controller_type": "generic",
+        "binding_url": "controller_binding_generic.json"
+    }
+],
+"actions":[
+    {
+        "name":"/actions/ar/in/set_cube",
+        "type": "boolean"
+    },
+    {
+        "name":"/actions/ar/in/hand_right",
+        "type":"pose"
+    }
+],
+"localization":[
+    {
+        "language_tag": "en_US",
+        "/actions/ar/in/set_cube": "Set the cube with this button",
+        "/actions/ar/in/hand_right": "The position the cube is placed at"
+    }
+]
+}

@@ -31,10 +31,18 @@ class Vr
     arDepthEstimation::Texture *m_texture;
     glm::mat4 m_eye_to_cam_left_mat[2];
     glm::mat4 m_eye_to_cam_right_mat[2];
+    glm::mat4 m_hmd_mat;
+    glm::mat4 m_controller_mat;
     glm::mat4 m_eye_unproj[2];
     glm::mat4 m_hmd_to_cam[2];
     glm::mat4 m_view_to_eye_mat[2];
-    glm::mat4 m_cam_proj_mat[2];;
+    glm::mat4 m_cam_proj_mat[2];
+    glm::mat4 m_cube_mat;
+
+    vr::VRActionHandle_t m_handle_set_cube;
+    bool m_set_cube = false;
+    vr::VRActionHandle_t m_handle_hand_right_pose;
+    vr::VRActionSetHandle_t m_action_set_handle = vr::k_ulInvalidActionSetHandle;
     void init_video_texture()
     {
 
@@ -98,6 +106,17 @@ class Vr
         logger_info << "trying to load framebuffers";
         init_framebuffers();
         logger_info << "loaded framebuffers";
+        // TODO: get absolute Path dynamicly!
+        vr::EVRInputError err = vr::VRInput()->SetActionManifestPath("C:\\Users\\davib\\source\\repos\\arDepthEstimation\\assets\\vr_actions.json");
+        if( err != vr::VRInputError_None){
+            std::string errorString {"ActionManifest could not be loaded! EVRInputError: "};
+            errorString += std::to_string(err);
+            throw std::runtime_error(errorString);
+        }
+        vr::VRInput()->GetActionHandle("/actions/ar/in/set_cube",&m_handle_set_cube);
+        vr::VRInput()->GetActionHandle("/actions/ar/in/hand_right",&m_handle_hand_right_pose);
+        vr::VRInput()->GetActionSetHandle("/actions/ar", &m_action_set_handle);
+
     }
 
     void update_texture()
@@ -115,8 +134,24 @@ class Vr
     void start_frame()
     {
         vr::VRActiveActionSet_t actionSet = {0};
-        vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unTrackedDeviceIndex_Hmd, NULL, 0);
+        actionSet.ulActionSet = m_action_set_handle;
+        vr::TrackedDeviceIndex_t right_hand_index = m_pHMD->GetTrackedDeviceIndexForControllerRole( vr::TrackedControllerRole_RightHand );
+        vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+        for(size_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++){
+            if(m_pHMD->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_HMD){
+                m_hmd_mat = ovr34_to_glm44( m_rTrackedDevicePose[i].mDeviceToAbsoluteTracking );
+            }
+            
+            if(i == right_hand_index && m_pHMD->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_Controller){
+                m_controller_mat = ovr34_to_glm44( m_rTrackedDevicePose[i].mDeviceToAbsoluteTracking );
+            }
+        }
         vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet), 1);
+        vr::InputDigitalActionData_t digital_action_data{};
+        vr::VRInput()->GetDigitalActionData(m_handle_set_cube,&digital_action_data,sizeof(vr::InputDigitalActionData_t),vr::k_ulInvalidInputValueHandle);
+        if(digital_action_data.bState == false && digital_action_data.bChanged == true ){
+            m_cube_mat = m_controller_mat;
+        }
     }
 
     inline glm::mat4 ovr34_to_glm44(vr::HmdMatrix34_t &m)
@@ -134,10 +169,13 @@ class Vr
         return result;
     }
 
+    void update_hmd_position(){
+    }
+
     void update_camera_transform_matrix()
     {
 
-        logger_info << "get camera projection";
+        //logger_info << "get camera projection";
         vr::HmdMatrix44_t ovr_cameraProjection[2];
         m_pVRTrackedCamera->GetCameraProjection(vr::k_unTrackedDeviceIndex_Hmd, vr::Eye_Left,
                                                 vr::VRTrackedCameraFrameType_Undistorted, 0.1, 10,
@@ -149,7 +187,7 @@ class Vr
         camera_projection[0] = ovr44_to_glm44(ovr_cameraProjection[0]);
         camera_projection[1] = ovr44_to_glm44(ovr_cameraProjection[1]);
 
-        logger_info << "get camera to head";
+        //logger_info << "get camera to head";
         vr::HmdMatrix34_t ovr_camera_to_head_mat[2];
         vr::VRSystem()->GetArrayTrackedDeviceProperty(
             vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_CameraToHeadTransforms_Matrix34_Array, vr::k_unHmdMatrix34PropertyTag,
@@ -158,10 +196,10 @@ class Vr
         camera_to_head_mat[0] = ovr34_to_glm44(ovr_camera_to_head_mat[0]);
         camera_to_head_mat[1] = ovr34_to_glm44(ovr_camera_to_head_mat[1]);//camera_to_head_mat[0];//(camera_to_head_mat[0]);//ovr34_to_glm44(ovr_camera_to_head_mat[1]);
         //camera_to_head_mat[1][3][0] = -camera_to_head_mat[1][3][0];
-        logger_info << "camera left to head x y z offset = " << camera_to_head_mat[0][3][0] << camera_to_head_mat[0][3][1] <<camera_to_head_mat[0][3][2] ;
-        logger_info << "camera right to head x offset = " << camera_to_head_mat[1][3][0] << camera_to_head_mat[1][3][1] << camera_to_head_mat[1][3][2];
+        //logger_info << "camera left to head x y z offset = " << camera_to_head_mat[0][3][0] << camera_to_head_mat[0][3][1] <<camera_to_head_mat[0][3][2] ;
+        //logger_info << "camera right to head x offset = " << camera_to_head_mat[1][3][0] << camera_to_head_mat[1][3][1] << camera_to_head_mat[1][3][2];
 
-        logger_info << "get eye to head transform";
+        //logger_info << "get eye to head transform";
         vr::HmdMatrix34_t ovr_eye_to_head_mat[2];
 
         typedef void (vr::IVRSystem::*fn_e2h_ptr)(vr::HmdMatrix34_t *, vr::EVREye);
@@ -174,14 +212,14 @@ class Vr
         eye_to_head_transform[0] = ovr34_to_glm44(ovr_eye_to_head_mat[0]);
         eye_to_head_transform[1] = ovr34_to_glm44(ovr_eye_to_head_mat[1]);
 
-        logger_info << "get eye projection matrix";
+        //logger_info << "get eye projection matrix";
         vr::HmdMatrix44_t ovr_eye_proj[2];
 
         typedef void (vr::IVRSystem::*fn_proj_ptr)(vr::HmdMatrix44_t *, vr::EVREye, float, float);
         fn_proj_ptr get_projection_matrix = reinterpret_cast<fn_proj_ptr>(&vr::IVRSystem::GetProjectionMatrix);
         (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[0]), vr::Eye_Left, 0.1, 10);
         (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[1]), vr::Eye_Right, 0.1, 10);
-        logger_info << "convert to glm mat4";
+        //logger_info << "convert to glm mat4";
         glm::mat4 eye_proj[2];
         eye_proj[0] = ovr44_to_glm44(ovr_eye_proj[0]);
         eye_proj[1] = ovr44_to_glm44(ovr_eye_proj[1]);
@@ -208,7 +246,7 @@ class Vr
         m_view_to_eye_mat[0] = eye_proj[0]*eye_to_head_transform[1];// * eye_proj[0] ; 
         m_view_to_eye_mat[1] = eye_proj[1]*eye_to_head_transform[0];// * eye_proj[1] ; 
 
-        logger_info << "finished update camera transform matrix";
+        //logger_info << "finished update camera transform matrix";
     }
 
     void bind_left_eye()

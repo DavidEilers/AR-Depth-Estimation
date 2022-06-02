@@ -102,6 +102,26 @@ class Mesh
         glUseProgram(0);
     }
 
+    void draw(glm::mat4 vp_matrix, glm::mat4 model_matrix )
+    {
+        //model_matrix[0][0] *= 0.1;
+        //model_matrix[1][1] *= 0.1;
+        //model_matrix[2][2] *= 0.1;
+        //glm::vec4 buff = model_matrix[0];
+        //model_matrix[0]= model_matrix[1];
+        //model_matrix[1]= buff;
+        glm::mat4 scale_mat{1.0f};
+        scale_mat = glm::scale(scale_mat,glm::vec3{0.1});
+        glm::mat4 mvp_matrix = vp_matrix*model_matrix*scale_mat;
+        
+        glUseProgram(m_shader->m_program_id);
+        glUniformMatrix4fv(m_mvp_loc, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+        glBindVertexArray(m_vao);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void *)(0));
+        glBindVertexArray(0);
+        glUseProgram(0);
+    }
+
     ~Mesh()
     {
         glDeleteVertexArrays(1, &m_vao);
