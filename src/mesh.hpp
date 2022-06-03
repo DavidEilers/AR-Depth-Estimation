@@ -8,6 +8,8 @@
 #include <glm/gtx/transform.hpp>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
 
 #include "shader.hpp"
 
@@ -19,17 +21,22 @@ struct __attribute__((packed)) MeshVertex
     float x;
     float y;
     float z;
+    float texture_u;
+    float texture_v;
+    float normal_x;
+    float normal_y;
+    float normal_z;
 };
 
 const MeshVertex cube_vertices[] = {
-    {-1, -1, -1}, // indices 0 {lower near left}
-    {1, -1, -1},  // indices 1 {lower near right}
-    {1, -1, 1},   // indices 2 {lower far right}
-    {-1, -1, 1},  // indices 3 {lower far left}
-    {-1, 1, -1},  // indices 4 {upper near left}
-    {1, 1, -1},   // indices 5 {upper near right}
-    {1, 1, 1},    // indices 6 {upper far right}
-    {-1, 1, 1}    // indices 7 {upper far left}
+    {-1, -1, -1,0,0,0,0,0}, // indices 0 {lower near left}
+    {1, -1, -1,0,0,0,0,0},  // indices 1 {lower near right}
+    {1, -1, 1,0,0,0,0,0},   // indices 2 {lower far right}
+    {-1, -1, 1,0,0,0,0,0},  // indices 3 {lower far left}
+    {-1, 1, -1,0,0,0,0,0},  // indices 4 {upper near left}
+    {1, 1, -1,0,0,0,0,0},   // indices 5 {upper near right}
+    {1, 1, 1,0,0,0,0,0},    // indices 6 {upper far right}
+    {-1, 1, 1,0,0,0,0,0}    // indices 7 {upper far left}
 };
 
 const GLushort cube_indices[]{
@@ -70,6 +77,10 @@ class Mesh
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)(sizeof(float)*3));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)(sizeof(float)*5));
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);

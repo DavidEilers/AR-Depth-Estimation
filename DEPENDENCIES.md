@@ -11,3 +11,4 @@ The projects include their respective LICENSE.md in their folder
 - STB under subprojects/stb
 - GLM under subprojects/glm
 - ImGUI under subprojects/imgui
+- tinyobjloader under subprojects/tinyobjloader

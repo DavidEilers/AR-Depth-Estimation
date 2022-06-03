@@ -60,8 +60,8 @@ class Vr
         }
         m_sampler.initialize_sampler();
         m_texture = new arDepthEstimation::Texture{
-            m_frameHeader.nWidth, m_frameHeader.nHeight, GL_RGBA8, GL_UNSIGNED_BYTE, nullptr, &m_sampler, 0};
-        m_framebuffer_data_size = m_frameHeader.nWidth * m_frameHeader.nHeight * m_frameHeader.nBytesPerPixel * 4;
+            m_frameHeader.nWidth, m_frameHeader.nHeight, GL_SRGB8, GL_UNSIGNED_BYTE, nullptr, &m_sampler, 0};
+        m_framebuffer_data_size = m_frameHeader.nWidth * m_frameHeader.nHeight * m_frameHeader.nBytesPerPixel * 3;
         m_framebuffer_data = new std::byte[m_framebuffer_data_size];
     }
 
@@ -126,7 +126,7 @@ class Vr
             &m_frameHeader, sizeof(m_frameHeader));
         */
         vr::EVRTrackedCameraError nCameraError = m_pVRTrackedCamera->GetVideoStreamTextureGL(
-            m_hTrackedCamera, vr::VRTrackedCameraFrameType_Distorted, &(m_texture->m_texture_id),
+            m_hTrackedCamera, vr::VRTrackedCameraFrameType_Undistorted, &(m_texture->m_texture_id),
             &m_frameHeader, sizeof(m_frameHeader));
         if (nCameraError != vr::VRTrackedCameraError_None)
         {

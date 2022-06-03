@@ -43,6 +43,11 @@ imgui_proj = subproject('imgui')
 imgui_dep = imgui_proj.get_variable('imgui_dep')
 dependencies += [imgui_dep]
 
+### Get the neccessary dependencies for tinyobjloader
+tinyobjloader_proj = subproject('tinyobjloader')
+tinyobjloader = tinyobjloader_proj.get_variable('tinyobjloader_dep')
+dependencies += [tinyobjloader]
+
 ### Create symlink for assets folder
 copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_build_dir()+'/assets', check: true)
 
