@@ -63,6 +63,7 @@ class Mesh
     GLuint m_mvp_loc;
     Shader *m_shader = nullptr;
     double m_time_start;
+    size_t indices_size;
 
   public:
     Mesh()
@@ -73,14 +74,51 @@ class Mesh
         glBindVertexArray(m_vao);
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
+
+        
+        std::string obj_dir("assets\\obj\\");
+        std::string cube_obj_path(obj_dir + "utah_teapot.obj");
+
+        std::vector<MeshVertex> vertices;
+        std::vector<GLushort> indices;
+
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string warn;
+        std::string error;
+        logger_info << "Before loading an Object";
+        if(tinyobj::LoadObj(&attrib,&shapes,&materials,&warn,&error,cube_obj_path.c_str())==false){
+            throw std::runtime_error("Could not load obj file: "+warn+error);
+        }
+
+        logger_info << "Loaded object from file";
+
+        for(size_t i = 0; i < attrib.vertices.size()/3; i++){
+            MeshVertex tmp{
+                attrib.vertices[i*3+0], //attrib vertice layout x, y , z, x, y, z...
+                attrib.vertices[i*3+1], 
+                attrib.vertices[i*3+2],
+                0,0,
+                0,0,0
+            };
+            vertices.push_back(tmp);
+        }
+        for(const tinyobj::shape_t & shape : shapes){
+            for(const tinyobj::index_t& index : shape.mesh.indices){
+                indices.push_back((GLushort)index.vertex_index);
+            }
+        }
+        indices_size = indices.size();
+        
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0])*vertices.size(), vertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0])*indices.size(), indices.data(), GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)offsetof(MeshVertex, x));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)(sizeof(float)*3));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)offsetof(MeshVertex, texture_u));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)(sizeof(float)*5));
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), (void *)offsetof(MeshVertex, normal_x));
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -128,7 +166,7 @@ class Mesh
         glUseProgram(m_shader->m_program_id);
         glUniformMatrix4fv(m_mvp_loc, 1, GL_FALSE, glm::value_ptr(mvp_matrix));
         glBindVertexArray(m_vao);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void *)(0));
+        glDrawElements(GL_TRIANGLES, indices_size, GL_UNSIGNED_SHORT, (void *)(0));
         glBindVertexArray(0);
         glUseProgram(0);
     }
