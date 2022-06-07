@@ -204,57 +204,63 @@ mat3 luminance_33(sampler2D sampler_obj, vec2 coord){
 void fill_buff(in out mat3 buff, int row, sampler2D sampler_obj, vec2 pixel_coord){
     vec2 texel_size = get_texel_size();
     vec2 coord = pixel_coord*texel_size;
-    buff[row][0] = texture(sampler_obj,coord+vec2(0,-1)*texel_size).r;
-    buff[row][1] = texture(sampler_obj,coord+vec2(0,0)*texel_size).r;
-    buff[row][2] = texture(sampler_obj,coord+vec2(0,1)*texel_size).r;
+    buff[row][0] = textureOffset(sampler_obj,coord,ivec2(0,-1)).r;
+    buff[row][1] = textureOffset(sampler_obj,coord,ivec2(0,0)).r;
+    buff[row][2] = textureOffset(sampler_obj,coord,ivec2(0,1)).r;
 }
 
-float calc_disparity_left_right(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
+float calc_disparity_right_left(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
     vec2 texel_size = get_texel_size();
-    vec2 pos_left = coord/texel_size;
+    vec2 left_eye_mid_trans = vec2(-0.0009,0.0152);
+    vec2 right_eye_mid_trans = vec2(0.0051,0.0082);
+    vec2 right_mid_to_left_mid = (-right_eye_mid_trans+left_eye_mid_trans)/texel_size;
+    vec2 pos_right = coord/texel_size;
     //float result = 100;
     int max_x_distance= int(size.x*0.6);
-    if(pos_left.x + max_x_distance < size.x){
-        size.x = int(pos_left.x + max_x_distance);
+    if(pos_right.x + max_x_distance < size.x){
+        size.x = int(pos_right.x + max_x_distance);
     }
-    mat3 luminance_left = luminance_33(image_left,coord);
+    mat3 luminance_right = luminance_33(image_right,coord);
     mat3 ring_buffer_texel_fetch;
-    fill_buff(ring_buffer_texel_fetch,0,right_eye_sampler,pos_left+vec2(-1,0));
-    fill_buff(ring_buffer_texel_fetch,1,right_eye_sampler,pos_left+vec2(0,0));
+    fill_buff(ring_buffer_texel_fetch,0,left_eye_sampler,pos_right+right_mid_to_left_mid+vec2(-1,0));
+    fill_buff(ring_buffer_texel_fetch,1,left_eye_sampler,pos_right+right_mid_to_left_mid+vec2(0,0));
     int ring_buffer_mid = 1;
-    for(vec2 pos_right = pos_left; pos_right.x <=size.x; pos_right.x++){
-        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,right_eye_sampler,pos_right+vec2(1,0));
-        float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_left);
+    for(vec2 pos_left = pos_right+right_mid_to_left_mid; pos_left.x <=size.x; pos_left.x++){
+        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+1)%3,left_eye_sampler,pos_left+right_mid_to_left_mid+vec2(1,0));
+        float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_right);
         ring_buffer_mid = int(ring_buffer_mid+1)%3;
         if(tmp<0.1){
-            float x_offset = abs(pos_right.x-pos_left.x)*texel_size.x;
+            float x_offset = abs(pos_left.x-pos_right.x-right_mid_to_left_mid.x)*texel_size.x;
             return x_offset;
         }
     }
     return 1.0; //nothing found => maximum disparity
 }
 
-float calc_disparity_right_left(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
+float calc_disparity_left_right(sampler2D image_left, sampler2D image_right, vec2 coord, ivec2 size){
     vec2 texel_size = get_texel_size();
-    vec2 pos_right = coord/texel_size;
-    vec2 pos_left = pos_right;
+    vec2 left_eye_mid_trans = vec2(-0.0009,0.0152);
+    vec2 right_eye_mid_trans = vec2(0.0051,0.0082);
+    vec2 left_mid_to_right_mid = (-left_eye_mid_trans + right_eye_mid_trans) / texel_size;
+    vec2 pos_left = coord/texel_size;
+    vec2 pos_right = pos_left + left_mid_to_right_mid;
     //float result = 100;
     int max_x_distance= int(size.x*0.7);
     int min_x_pos = 0;
-    if(pos_right.x - max_x_distance > 0){
-        min_x_pos = int(pos_right.x - max_x_distance);
+    if(pos_left.x - max_x_distance > 0){
+        min_x_pos = int(pos_left.x - max_x_distance);
     }
-    mat3 luminance_right = luminance_33(image_right,coord);
+    mat3 luminance_left = luminance_33(image_left,coord);
     mat3 ring_buffer_texel_fetch;
-    fill_buff(ring_buffer_texel_fetch,2,left_eye_sampler,pos_left+vec2(1,0));
-    fill_buff(ring_buffer_texel_fetch,1,left_eye_sampler,pos_left+vec2(0,0));
+    fill_buff(ring_buffer_texel_fetch,2,right_eye_sampler,pos_right+vec2(1,0));
+    fill_buff(ring_buffer_texel_fetch,1,right_eye_sampler,pos_right+vec2(0,0));
     int ring_buffer_mid = 1;
-    for(; pos_left.x > min_x_pos ; pos_left.x--){
-        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+2)%3,left_eye_sampler,pos_left+vec2(-1,0));
-        float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_right);
+    for(; pos_right.x > min_x_pos ; pos_right.x--){
+        fill_buff(ring_buffer_texel_fetch,int(ring_buffer_mid+2)%3,right_eye_sampler,pos_right+vec2(-1,0));
+        float tmp = sum_of_absolute_differences(ring_buffer_mid, ring_buffer_texel_fetch, luminance_left);
         ring_buffer_mid = int(ring_buffer_mid+2)%3;
         if(tmp<0.1){
-            float x_offset = abs(pos_right.x-pos_left.x)*texel_size.x;
+            float x_offset = abs(pos_left.x-pos_right.x-left_mid_to_right_mid.x)*texel_size.x;
             return x_offset;
         }
     }
@@ -515,11 +521,11 @@ void main()
     //vec3 final_color = (test);//vec3(sobel_luminance);//final_luminace*10);
     vec3 final_color;
     if(is_rgb == true){
-        final_color = vec3(calc_disparity_left_right_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
+        //final_color = vec3(calc_disparity_left_right_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left_RGB(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
     }else{
-        final_color= vec3(calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
-        //float left_disp = calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size);
-        //final_color = vec3(left_disp);
+        //final_color= vec3(calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size),calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size),0.0);
+        float left_disp = calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size);
+        final_color = vec3(left_disp);
     }
     //vec3 final_color= vec3(1-calc_disparity_left_right(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
     //vec3 final_color= vec3(1-calc_disparity_right_left(left_eye_sampler,right_eye_sampler,image_coord,texture_size));
