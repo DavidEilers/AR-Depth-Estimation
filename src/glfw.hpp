@@ -14,6 +14,7 @@
 
 #include "log.hpp"
 #include "shader.hpp"
+#include "frametime_probe.hpp"
 
 namespace arDepthEstimation
 {
@@ -49,6 +50,7 @@ class ContextManager
 
     GLFWwindow *m_window;
     int m_width, m_height;
+    FrameTimeProbe m_ftp_glfwFrametime{"GLFW frametime"};
 
     bool should_window_close()
     {
@@ -122,17 +124,11 @@ void run_app(Application *app)
     m_context = std::make_unique<ContextManager>();
 
     app->setup();
-    double time_frame_start;
-    double time_frame_finish;
-    double frame_time = 0;
-    double prev_print_time = glfwGetTime();
-    double frame_time_avg = 0;
-    double frame_time_min = 10000;
-    double frame_time_max = 0;
+    
     constexpr double timer_print_threshold = 5.0; // Every 5 seconds
     while (m_context->should_window_close() == false)
     {
-        time_frame_start = glfwGetTime();
+        m_context->m_ftp_glfwFrametime.start();
         
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -143,19 +139,7 @@ void run_app(Application *app)
         glFlush();
         glFinish();
 
-        time_frame_finish = glfwGetTime();
-        frame_time = time_frame_finish - time_frame_start;
-        if(frame_time < frame_time_min) frame_time_min = frame_time;
-        if(frame_time_max < frame_time) frame_time_max = frame_time;
-        frame_time_avg = (frame_time_avg + frame_time) / 2.0;
-        if (time_frame_finish - prev_print_time > timer_print_threshold)
-        {
-            logger_info << "frametime min, avg, max:" << frame_time_min*1000 << frame_time_avg*1000 << frame_time_max*1000;
-            prev_print_time = time_frame_finish;
-            frame_time_avg = frame_time;
-            frame_time_min = 10000;
-            frame_time_max = 0;
-        }
+        m_context->m_ftp_glfwFrametime.stop();
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         ImGui::Render();
         glViewport(0, 0, m_context->m_width, m_context->m_height);

@@ -5,6 +5,7 @@
 #define ERROR_LOG_ENABLED
 #define WARN_LOG_ENABLED
 #define INFO_LOG_ENABLED
+#define FRAMETIME_LOG_ENABLED
 
 namespace arDepthEstimation
 {
@@ -48,6 +49,13 @@ Logger logger_warn{"\033[33m[Warning]\033[0m", (&std::cout), false};
 Logger logger_info{"[Info]", (&std::cout), true};
 #else
 Logger logger_info{"[Info]", (&std::cout), false};
+#endif
+
+
+#ifdef FRAMETIME_LOG_ENABLED
+Logger logger_frametime{"[Frametime]", (&std::cout), true};
+#else
+Logger logger_frametime{"[Frametime]", (&std::cout), false};
 #endif
 
 } // namespace arDepthEstimation

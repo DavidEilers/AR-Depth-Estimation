@@ -14,6 +14,7 @@ extern "C"
 #include "sampler.hpp"
 #include "texture.hpp"
 #include "application_window_vr.hpp"
+#include "frametime_probe.hpp"
 
 namespace arDepthEstimation
 {
@@ -54,9 +55,12 @@ class MainApplication : public Application
     LinearSampler m_disparity_sampler{};
 
     double frametime_VR;
-    double frametime_depthEstimator;
-    double frametime_depthEstimator_min=10000;
-    double frametime_depthEstimator_max=0;
+    FrameTimeProbe ftp_totalFrameTime{"Total FrameTime"};
+    FrameTimeProbe ftp_gettingCameraFrame{"Getting OpenVR camera frame"};
+    FrameTimeProbe ftp_depthEstimator{"Depth estimation"};
+    FrameTimeProbe ftp_renderingLeft{"Left eye rendering"};
+    FrameTimeProbe ftp_renderingRight{"Right eye rendering"};
+    FrameTimeProbe ftp_submitFrame{"Submiting eye frames to OpenVR"};
     double frametime_renderingLeft;
     double frametime_renderingRight;
     double frametime_submit;
@@ -126,16 +130,18 @@ class MainApplication : public Application
 
     void draw(int width, int height)
     {
-        double time_frame_start = glfwGetTime();
+        ftp_totalFrameTime.start();
         frame_counter++;
         draw_vr();
-        frametime_VR = glfwGetTime() - time_frame_start; 
-        if(frame_counter%500==0){
-            //logger_info << "Frametime for depth_estimator, left eye, right eye, submit, whole VR:" << frametime_depthEstimator*1000 << frametime_renderingLeft*1000 << frametime_renderingRight*1000 << frametime_submit*1000 << frametime_VR*1000;
-            logger_info << "Frametime for depth_estimator min, now, max:" << frametime_depthEstimator_min*1000 << frametime_depthEstimator*1000 << frametime_depthEstimator_max*1000;
-            frametime_depthEstimator_min = 10000;
-            frametime_depthEstimator_max = 0;
-            frame_counter=0;
+        ftp_totalFrameTime.stop();
+        if(frame_counter%1000==0){
+            logger_frametime << ftp_totalFrameTime.to_string(); ftp_totalFrameTime.reset();
+            logger_frametime << ftp_gettingCameraFrame.to_string(); ftp_gettingCameraFrame.reset();
+            logger_frametime << ftp_depthEstimator.to_string(); ftp_depthEstimator.reset();
+            logger_frametime << ftp_renderingLeft.to_string(); ftp_renderingLeft.reset();
+            logger_frametime << ftp_renderingRight.to_string(); ftp_renderingRight.reset();
+            logger_frametime << ftp_submitFrame.to_string(); ftp_submitFrame.reset();
+            logger_frametime << "------------------------------";
         }
         m_window_renderer->draw_window(width,height);
         glFlush();
@@ -144,21 +150,23 @@ class MainApplication : public Application
 
     void inline draw_vr()
     {
+        
+        ftp_gettingCameraFrame.start();
         m_vr->start_frame();
         m_vr->update_texture();
-        double time_depth_estimator_start = glfwGetTime();
+        ftp_gettingCameraFrame.stop();
+        
+        ftp_depthEstimator.start();
         m_depth_estimator->update_depth_map(m_vr->m_texture->get_texture_id());
-        frametime_depthEstimator = glfwGetTime()-time_depth_estimator_start;
-        if(frametime_depthEstimator < frametime_depthEstimator_min) frametime_depthEstimator_min = frametime_depthEstimator;
-        if(frametime_depthEstimator_max < frametime_depthEstimator) frametime_depthEstimator_max = frametime_depthEstimator;
         m_vr->update_camera_transform_matrix();
+        ftp_depthEstimator.stop();
 
         m_vr->m_texture->bind();
         glEnable(GL_MULTISAMPLE);
         
 
 
-        double time_left_eye_start = glfwGetTime();
+        ftp_renderingLeft.start();
 
         m_vr->bind_left_eye();
         glUseProgram(m_shader->m_program_id);
@@ -186,10 +194,10 @@ class MainApplication : public Application
         glDisable(GL_DEPTH_TEST);
         m_vr->blit_frame_left();
 
-        frametime_renderingLeft = glfwGetTime()-time_left_eye_start;
+        ftp_renderingLeft.stop();
 
         
-        double time_right_eye_start = glfwGetTime();
+        ftp_renderingRight.start();
 
         m_vr->bind_right_eye();
         glUseProgram(m_shader->m_program_id);
@@ -218,16 +226,16 @@ class MainApplication : public Application
         m_vr->blit_frame_right();
 
         
-        frametime_renderingRight = glfwGetTime()-time_right_eye_start;
+        ftp_renderingRight.stop();
 
-        double time_submit_start = glfwGetTime();
+        ftp_submitFrame.start();
 
         glDisable(GL_MULTISAMPLE);
 
         m_vr->m_texture->unbind();
         m_vr->submit_frames();
-        frametime_submit = glfwGetTime()-time_submit_start;
         glFinish();
+        ftp_submitFrame.stop();
     }
 
     ~MainApplication()
