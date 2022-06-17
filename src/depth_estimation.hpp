@@ -6,6 +6,7 @@
 #include "log.hpp"
 #include "sampler.hpp"
 #include "shader.hpp"
+#include "frametime_probe.hpp"
 
 namespace arDepthEstimation
 {
@@ -33,7 +34,9 @@ class DepthEstimator
     bool m_is_rgb;
     GLuint m_framebuffer_id;
     GLuint m_framebuffer_texture_id;
-    Downscaler *m_downscaler;
+    std::array<Downscaler*,3> m_downscalers{};
+    //Downscaler *m_downscaler;
+    FrameTimeProbe m_ftp_downscale{"Downscaling Image"};
 
     void inline create_framebuffer()
     {
@@ -114,17 +117,24 @@ class DepthEstimator
   public:
     DepthEstimator(int input_width, int input_height, bool is_single_texture, float gamma = 1.0,
                    bool is_upside_down = false, bool is_rgb = false)
-        : m_input_width{input_width}, m_input_height{input_height}, m_output_width{input_width / 4},
-          m_output_height{input_height / 4}, m_is_rgb{is_rgb}
+        : m_input_width{input_width}, m_input_height{input_height}, m_output_width{input_width / 8},
+          m_output_height{input_height / 8}, m_is_rgb{is_rgb}
     {
         create_framebuffer();
         create_shader();
         create_vao();
         logger_info << "Depth Estimatior" << m_input_width / 2 << m_input_height / 2 << m_output_width
                     << m_output_height;
-        m_downscaler = new Downscaler{m_input_width / 2, m_input_height / 2, m_output_width,
-                                      m_output_height,   is_single_texture,  gamma,
+        m_downscalers[0] = new Downscaler{m_input_width, m_input_height, m_input_width/2,
+                                      m_input_height/2,   is_single_texture,  gamma,
                                       is_upside_down, is_rgb};
+        m_downscalers[1] = new Downscaler{m_input_width/2, m_input_height/2, m_input_width/4,
+                                      m_input_height/4,   false,  gamma,
+                                      false, is_rgb};
+        m_downscalers[2] = new Downscaler{m_input_width/4, m_input_height/4, m_input_width/8,
+                                      m_input_height/8,   false,  gamma,
+                                      false, is_rgb};
+        
     }
 
     ~DepthEstimator()
@@ -132,7 +142,9 @@ class DepthEstimator
         delete_framebuffer();
         delete_shader();
         delete_vao();
-        delete m_downscaler;
+        for(auto e : m_downscalers){
+            delete e;
+        }
     }
 
     GLuint get_framebuffer_texture_id()
@@ -140,11 +152,19 @@ class DepthEstimator
         return m_framebuffer_texture_id;
     }
 
+    FrameTimeProbe& get_ftp_downscale(){
+        return m_ftp_downscale;
+    }
+
     void update_depth_map(GLuint left_eye_texture_id, GLuint right_eye_texture_id)
     {
-        m_downscaler->downscale(left_eye_texture_id, right_eye_texture_id);
-        GLuint texture_left = m_downscaler->get_framebuffer_left_texture_id();
-        GLuint texture_right = m_downscaler->get_framebuffer_right_texture_id();
+        m_ftp_downscale.start();
+        m_downscalers[0]->downscale(left_eye_texture_id, right_eye_texture_id);
+        m_downscalers[1]->downscale(m_downscalers[0]->get_framebuffer_left_texture_id(), m_downscalers[0]->get_framebuffer_right_texture_id());
+        m_downscalers[2]->downscale(m_downscalers[1]->get_framebuffer_left_texture_id(), m_downscalers[1]->get_framebuffer_right_texture_id());
+        m_ftp_downscale.stop();
+        GLuint texture_left = m_downscalers[2]->get_framebuffer_left_texture_id();
+        GLuint texture_right = m_downscalers[2]->get_framebuffer_right_texture_id();
         glUseProgram(m_shader->m_program_id);
         glUniform2i(m_texture_size_loc, m_output_width, m_output_height);
         glUniform1i(m_is_rgb_loc, m_is_rgb ? (GL_TRUE) : (GL_FALSE));
@@ -170,9 +190,13 @@ class DepthEstimator
 
     void update_depth_map(GLuint both_eyes_texture_id)
     {
-        m_downscaler->downscale(both_eyes_texture_id);
-        GLuint texture_left = m_downscaler->get_framebuffer_left_texture_id();
-        GLuint texture_right = m_downscaler->get_framebuffer_right_texture_id();
+        m_ftp_downscale.start();
+        m_downscalers[0]->downscale(both_eyes_texture_id);
+        m_downscalers[1]->downscale(m_downscalers[0]->get_framebuffer_left_texture_id(), m_downscalers[0]->get_framebuffer_right_texture_id());
+        m_downscalers[2]->downscale(m_downscalers[1]->get_framebuffer_left_texture_id(), m_downscalers[1]->get_framebuffer_right_texture_id());
+        m_ftp_downscale.stop();
+        GLuint texture_left = m_downscalers[2]->get_framebuffer_left_texture_id();
+        GLuint texture_right = m_downscalers[2]->get_framebuffer_right_texture_id();
         glUseProgram(m_shader->m_program_id);
         glUniform2i(m_texture_size_loc, m_output_width / 2, m_output_height);
         glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_id);
@@ -196,10 +220,10 @@ class DepthEstimator
     }
 
     GLuint get_luminance_camera_left(){
-        return m_downscaler->get_framebuffer_left_texture_id();
+        return m_downscalers[2]->get_framebuffer_left_texture_id();
     }
     GLuint get_luminance_camera_right(){
-        return m_downscaler->get_framebuffer_right_texture_id();
+        return m_downscalers[2]->get_framebuffer_right_texture_id();
     }
 };
 } // namespace arDepthEstimation

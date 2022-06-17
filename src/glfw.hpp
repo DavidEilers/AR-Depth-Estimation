@@ -80,7 +80,7 @@ class ContextManager
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         //glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
-#define DEBUG_GL
+//#define DEBUG_GL
 #ifdef DEBUG_GL
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
@@ -145,7 +145,7 @@ void run_app(Application *app)
         glViewport(0, 0, m_context->m_width, m_context->m_height);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        m_context->swap_buffers();
+        //m_context->swap_buffers();
     }
     m_context.reset();
 }

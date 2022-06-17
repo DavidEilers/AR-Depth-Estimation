@@ -13,6 +13,16 @@ layout(location = 0)out vec4 color_left;
 layout(location = 1)out vec4 color_right;
 vec2 texel_size;
 
+vec4 kernel_filter33(sampler2D sampler_obj, vec2 coord,float kernel[9], vec2 offset){
+    vec4 filter_color = vec4(0.0);
+    for(int i=0; i<3; i++){
+        for(int j=0; j<3;j++){
+            vec2 offset_coord = coord + vec2((i-1),(j-1))*texel_size;
+            filter_color += kernel[j*3+i] * texture(sampler_obj,offset_coord+offset);
+        }
+    }
+    return filter_color;
+}
 
 
 vec4 kernel_filter55(sampler2D sampler_obj, vec2 coord,float kernel[25], vec2 offset){
@@ -74,6 +84,10 @@ vec4 rgb_gaussian55(sampler2D sampler_obj, vec2 coord, vec2 offset){
     return kernel_filter55(sampler_obj,coord,gaussian_kernel55,offset);
 }
 
+vec4 rgb_gaussian33(sampler2D sampler_obj, vec2 coord, vec2 offset){
+    return kernel_filter33(sampler_obj,coord,gaussian_kernel33,offset);
+}
+
 float luminance_gaussian33(sampler2D sampler_obj, vec2 coord, vec2 offset){
 
     return luminance_kernel_filter33(sampler_obj, coord, gaussian_kernel33, offset);
@@ -87,26 +101,26 @@ void main()
 
     if(is_single_texture== true){ // Left and right image are in one texture an o
         if(is_rgb == true){
-            vec3 left_color = rgb_gaussian55(both_eye_sampler,image_coord*vec2(0.5,1.0), vec2(0.0,0.0)).rgb;
+            vec3 left_color = rgb_gaussian33(both_eye_sampler,image_coord*vec2(0.5,1.0), vec2(0.0,0.0)).rgb;
             color_left = vec4(left_color,1.0);
-            vec3 right_color = rgb_gaussian55(both_eye_sampler,image_coord*vec2(0.5,1.0),vec2(0.5,0.0)).rgb;
+            vec3 right_color = rgb_gaussian33(both_eye_sampler,image_coord*vec2(0.5,1.0),vec2(0.5,0.0)).rgb;
             color_right = vec4(right_color,1.0);
         } else{
-            float left_luminance = luminance_gaussian55(both_eye_sampler,image_coord*vec2(0.5,1.0), vec2(0.0,0.0));
+            float left_luminance = luminance_gaussian33(both_eye_sampler,image_coord*vec2(0.5,1.0), vec2(0.0,0.0));
             color_left = vec4(vec3(left_luminance),1.0);
-            float right_luminance = luminance_gaussian55(both_eye_sampler,image_coord*vec2(0.5,1.0),vec2(0.5,0.0));
+            float right_luminance = luminance_gaussian33(both_eye_sampler,image_coord*vec2(0.5,1.0),vec2(0.5,0.0));
             color_right = vec4(vec3(right_luminance),1.0);
         }
     } else{
         if(is_rgb == true){
-            vec3 left_color = rgb_gaussian55(left_eye_sampler,image_coord, vec2(0.0,0.0)).rgb;
+            vec3 left_color = rgb_gaussian33(left_eye_sampler,image_coord, vec2(0.0,0.0)).rgb;
             color_left = vec4(left_color,1.0);
-            vec3 right_color = rgb_gaussian55(right_eye_sampler,image_coord,vec2(0.0,0.0)).rgb;
+            vec3 right_color = rgb_gaussian33(right_eye_sampler,image_coord,vec2(0.0,0.0)).rgb;
             color_right = vec4(right_color,1.0);
         } else{
-            float left_luminance = luminance_gaussian55(left_eye_sampler,image_coord, vec2(0.0,0.0));
+            float left_luminance = luminance_gaussian33(left_eye_sampler,image_coord, vec2(0.0,0.0));
             color_left = vec4(vec3(left_luminance),1.0);
-            float right_luminance = luminance_gaussian55(right_eye_sampler,image_coord,vec2(0.0,0.0));
+            float right_luminance = luminance_gaussian33(right_eye_sampler,image_coord,vec2(0.0,0.0));
             color_right = vec4(vec3(right_luminance),1.0);
         }
     }

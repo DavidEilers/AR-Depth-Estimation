@@ -138,6 +138,7 @@ class MainApplication : public Application
             logger_frametime << ftp_totalFrameTime.to_string(); ftp_totalFrameTime.reset();
             logger_frametime << ftp_gettingCameraFrame.to_string(); ftp_gettingCameraFrame.reset();
             logger_frametime << ftp_depthEstimator.to_string(); ftp_depthEstimator.reset();
+            logger_frametime << m_depth_estimator->get_ftp_downscale().to_string();m_depth_estimator->get_ftp_downscale().reset();
             logger_frametime << ftp_renderingLeft.to_string(); ftp_renderingLeft.reset();
             logger_frametime << ftp_renderingRight.to_string(); ftp_renderingRight.reset();
             logger_frametime << ftp_submitFrame.to_string(); ftp_submitFrame.reset();
@@ -166,7 +167,7 @@ class MainApplication : public Application
         
 
 
-        ftp_renderingLeft.start();
+        
 
         m_vr->bind_left_eye();
         glUseProgram(m_shader->m_program_id);
@@ -192,6 +193,7 @@ class MainApplication : public Application
        //m_cube_mesh->draw((m_vr->m_view_to_eye_mat[0])*(glm::inverse(m_vr->m_hmd_mat)),m_window_renderer->m_translation,m_window_renderer->m_scale, m_window_renderer->m_y_rotation_degrees);
         m_cube_mesh->draw((m_vr->m_view_to_eye_mat[0])*(glm::inverse(m_vr->m_hmd_mat)),m_vr->m_cube_mat);
         glDisable(GL_DEPTH_TEST);
+        ftp_renderingLeft.start();
         m_vr->blit_frame_left();
 
         ftp_renderingLeft.stop();
