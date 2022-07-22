@@ -15,6 +15,7 @@
 #include "log.hpp"
 #include "shader.hpp"
 #include "frametime_probe.hpp"
+#include "asset_path.hpp"
 
 namespace arDepthEstimation
 {
@@ -121,37 +122,38 @@ class ContextManager
     }
 };
 
-std::unique_ptr<ContextManager> m_context = nullptr;
+std::unique_ptr<ContextManager> g_context = nullptr;
+AssetPath g_asset_path{};
 
 void run_app(Application *app)
 {
-    m_context = std::make_unique<ContextManager>();
+    g_context = std::make_unique<ContextManager>();
 
     app->setup();
     
     constexpr double timer_print_threshold = 5.0; // Every 5 seconds
-    while (m_context->should_window_close() == false)
+    while (g_context->should_window_close() == false)
     {
-        m_context->m_ftp_glfwFrametime.start();
+        g_context->m_ftp_glfwFrametime.start();
         
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        m_context->update_window();
-        app->draw(m_context->m_width, m_context->m_height);
+        g_context->update_window();
+        app->draw(g_context->m_width, g_context->m_height);
         glFlush();
         glFinish();
 
-        m_context->m_ftp_glfwFrametime.stop();
+        g_context->m_ftp_glfwFrametime.stop();
         glBindFramebuffer(GL_FRAMEBUFFER,0);
         ImGui::Render();
-        glViewport(0, 0, m_context->m_width, m_context->m_height);
+        glViewport(0, 0, g_context->m_width, g_context->m_height);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        m_context->swap_buffers();
+        g_context->swap_buffers();
     }
-    m_context.reset();
+    g_context.reset();
 }
 
 } // namespace arDepthEstimation

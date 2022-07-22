@@ -195,7 +195,7 @@ class MainApplication : public Application
                 //logger_frametime << m_ftp_test.to_string();m_ftp_test.reset();
                 //logger_frametime << "------------------------------";
                 if(m_stereo_image_iterator >= m_stereo_image_pairs.first.size()-1){
-                    m_context->close_window();
+                    g_context->close_window();
                     return;
                 }
                 m_stereo_image_iterator++;
