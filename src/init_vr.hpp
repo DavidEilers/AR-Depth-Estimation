@@ -207,11 +207,16 @@ class Vr
         //logger_info << "get eye to head transform";
         vr::HmdMatrix34_t ovr_eye_to_head_mat[2];
 
+     #if defined(__GNUC__) && defined(_WIN32)
         typedef void (vr::IVRSystem::*fn_e2h_ptr)(vr::HmdMatrix34_t *, vr::EVREye);
         fn_e2h_ptr get_eye_to_head_transform = reinterpret_cast<fn_e2h_ptr>(&vr::IVRSystem::GetEyeToHeadTransform);
 
         (m_pHMD->*get_eye_to_head_transform)(&(ovr_eye_to_head_mat[0]), vr::Eye_Left);
         (m_pHMD->*get_eye_to_head_transform)(&(ovr_eye_to_head_mat[1]), vr::Eye_Right);
+    #else
+        ovr_eye_to_head_mat[0] = m_pHMD->GetEyeToHeadTransform(vr::Eye_Left);
+        ovr_eye_to_head_mat[1] = m_pHMD->GetEyeToHeadTransform(vr::Eye_Right);
+    #endif
 
         glm::mat4 eye_to_head_transform[2];
         eye_to_head_transform[0] = ovr34_to_glm44(ovr_eye_to_head_mat[0]);
@@ -220,10 +225,15 @@ class Vr
         //logger_info << "get eye projection matrix";
         vr::HmdMatrix44_t ovr_eye_proj[2];
 
+    #if defined(__GNUC__) && defined(_WIN32)
         typedef void (vr::IVRSystem::*fn_proj_ptr)(vr::HmdMatrix44_t *, vr::EVREye, float, float);
         fn_proj_ptr get_projection_matrix = reinterpret_cast<fn_proj_ptr>(&vr::IVRSystem::GetProjectionMatrix);
         (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[0]), vr::Eye_Left, 0.1, 10);
         (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[1]), vr::Eye_Right, 0.1, 10);
+    #else
+        m_pHMD->GetProjectionMatrix(vr::Eye_Left,0.1,10);
+        m_pHMD->GetProjectionMatrix(vr::Eye_Right,0.1,10);
+    #endif
         //logger_info << "convert to glm mat4";
         glm::mat4 eye_proj[2];
         eye_proj[0] = ovr44_to_glm44(ovr_eye_proj[0]);
