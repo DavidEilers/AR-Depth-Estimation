@@ -12,7 +12,7 @@ class AssetPath{
 
     ~AssetPath(){}
 
-    std::filesystem::path getPath(std::initializer_list<std::string> list){
+    std::filesystem::path get_path(std::initializer_list<std::string> list){
         std::filesystem::path outPath = asset_path;
         for(auto e :list){
             outPath /= e;

@@ -75,9 +75,7 @@ class Mesh
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
 
-        
-        std::string obj_dir("assets\\obj\\");
-        std::string cube_obj_path(obj_dir + "utah_teapot.obj");
+        std::string cube_obj_path{g_asset_path.get_path({"obj","utah_teapot.obj"}).string()};
 
         std::vector<MeshVertex> vertices;
         std::vector<GLushort> indices;
@@ -124,9 +122,8 @@ class Mesh
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "mesh.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "mesh.frag.glsl");
+        std::string vertex_shader_path{g_asset_path.get_path({"shader","mesh.vert.glsl"}).string()};
+        std::string fragment_shader_path{g_asset_path.get_path({"shader","mesh.frag.glsl"}).string()};
 
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 

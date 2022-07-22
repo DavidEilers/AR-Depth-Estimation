@@ -73,17 +73,14 @@ class MainApplication : public Application
 
         glClearColor(0.5f, 0.5f, 0.5, 1.0);
 
-        std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "screen_quad_simple.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "screen_quad_simple.frag.glsl");
+        std::string vertex_shader_path{g_asset_path.get_path({"shader","screen_quad_simple.vert.glsl"}).string() };
+        std::string fragment_shader_path{g_asset_path.get_path({"shader","screen_quad_simple.frag.glsl"}).string()};
         // Shader myShader{vertex_shader_path, fragment_shader_path};
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 
         stbi_set_flip_vertically_on_load(true);
 
-        std::filesystem::path test_data_path = std::filesystem::current_path();
-        test_data_path /= "assets";
-        test_data_path /= "test_data";
+        std::filesystem::path test_data_path{g_asset_path.get_path({"test_data"})};
         const size_t test_data_path_length = test_data_path.string().length() +1;
 
         

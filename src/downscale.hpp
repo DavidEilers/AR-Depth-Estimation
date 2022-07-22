@@ -87,9 +87,8 @@ class Downscaler
 
     void inline create_shader()
     {
-        std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "downscale.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "downscale.frag.glsl");
+        std::string vertex_shader_path{g_asset_path.get_path({"shader","downscale.vert.glsl"}).string()};
+        std::string fragment_shader_path{g_asset_path.get_path({"shader","downscale.frag.glsl"}).string()};
 
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 

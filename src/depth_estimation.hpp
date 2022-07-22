@@ -72,9 +72,8 @@ class DepthEstimator
 
     void inline create_shader()
     {
-        std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "depth_estimation.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "depth_estimation.frag.glsl");
+        std::string vertex_shader_path{g_asset_path.get_path({"shader","depth_estimation.vert.glsl"}).string()};
+        std::string fragment_shader_path{g_asset_path.get_path({"shader","depth_estimation.frag.glsl"}).string()};
 
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 

@@ -10,6 +10,7 @@
 #include "framebuffer.hpp"
 #include "log.hpp"
 #include "texture.hpp"
+#include "glfw.hpp"
 
 namespace arDepthEstimation
 {
@@ -106,8 +107,7 @@ class Vr
         logger_info << "trying to load framebuffers";
         init_framebuffers();
         logger_info << "loaded framebuffers";
-        // TODO: get absolute Path dynamicly!
-        vr::EVRInputError err = vr::VRInput()->SetActionManifestPath("C:\\Users\\davib\\source\\repos\\arDepthEstimation\\assets\\vr_actions.json");
+        vr::EVRInputError err = vr::VRInput()->SetActionManifestPath(g_asset_path.get_path({"vr_actions.json"}).string().c_str());
         if( err != vr::VRInputError_None){
             std::string errorString {"ActionManifest could not be loaded! EVRInputError: "};
             errorString += std::to_string(err);

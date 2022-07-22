@@ -95,9 +95,8 @@ class MainApplication : public Application
 
         glClearColor(0.5f, 0.5f, 0.5, 1.0);
 
-        std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "screen_quad.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "screen_quad.frag.glsl");
+        std::string vertex_shader_path{g_asset_path.get_path({"shader","screen_quad.vert.glsl"}).string()};
+        std::string fragment_shader_path{g_asset_path.get_path({"shader","screen_quad.frag.glsl"}).string()};
 
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 

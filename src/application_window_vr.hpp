@@ -89,9 +89,8 @@ class WindowRenderer
 
         glClearColor(0.5f, 0.5f, 0.5, 1.0);
 
-        std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "screen_quad_simple.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "screen_quad_simple.frag.glsl");
+        std::string vertex_shader_path{g_asset_path.get_path({"shader","screen_quad_simple.vert.glsl"}).string()};
+        std::string fragment_shader_path{g_asset_path.get_path({"shader","screen_quad_simple.frag.glsl"}).string()};
 
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 

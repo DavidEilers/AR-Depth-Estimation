@@ -60,15 +60,14 @@ class MainApplication : public Application
 
         glClearColor(0.5f, 0.5f, 0.5, 1.0);
 
-        std::string shader_dir("assets\\shader\\");
-        std::string vertex_shader_path(shader_dir + "screen_quad.vert.glsl");
-        std::string fragment_shader_path(shader_dir + "screen_quad.frag.glsl");
+        std::string vertex_shader_path{g_asset_path.get_path({"shader","screen_quad.vert.glsl"}).string()};
+        std::string fragment_shader_path{g_asset_path.get_path({"shader","screen_quad.frag.glsl"}).string()};
         // Shader myShader{vertex_shader_path, fragment_shader_path};
         m_shader = new Shader{vertex_shader_path, fragment_shader_path};
 
         int width, height, channels;
         std::byte *image_data =
-            (std::byte *)stbi_load("assets\\test_data\\Adirondack-perfect\\im0.png", &width, &height, &channels, 4);
+            (std::byte *)stbi_load(g_asset_path.get_path({"test_data","Adirondack-perfect","im0.png"}).string().c_str(), &width, &height, &channels, 4);
         if (image_data == nullptr || channels < 3 || channels > 4)
         {
             logger_error << "couldn't load image!";
