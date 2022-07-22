@@ -53,7 +53,7 @@ float luminance_kernel_filter33(sampler2D sampler_obj, vec2 coord,float kernel[9
     for(int i=0; i<3; i++){
         for(int j=0; j<3;j++){
             vec2 offset_coord = coord + vec2((i-1),(j-1))*texel_size;
-            filter_color += kernel[j*5+i] * dot(texture(sampler_obj,offset_coord+offset).rgb,vec3(0.299,0.587,0.114));
+            filter_color += kernel[j*3+i] * dot(texture(sampler_obj,offset_coord+offset).rgb,vec3(0.299,0.587,0.114));
         }
     }
     return filter_color;

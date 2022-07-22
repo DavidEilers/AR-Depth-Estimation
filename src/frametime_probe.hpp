@@ -55,5 +55,10 @@ class FrameTimeProbe{
         return out.str();
     }
 
+    std::string to_csv_line(std::string name){
+        std::stringstream  out{}; out << name << "," << std::setprecision(4) << m_min_time*1000 << "," << m_avg_time*1000 << "," << m_max_time*1000;
+        return out.str();
+    }
+
 
 };

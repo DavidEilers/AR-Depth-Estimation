@@ -7,10 +7,14 @@ extern "C"
 }
 
 #include <cstddef>
+#include <filesystem>
+#include <tuple>
+#include <utility>
 
 #include "depth_estimation.hpp"
 #include "mesh.hpp"
 #include "texture.hpp"
+#include "frametime_probe.hpp"
 
 namespace arDepthEstimation
 {
@@ -37,6 +41,13 @@ class MainApplication : public Application
     arDepthEstimation::LinearSampler m_sampler{};
     Shader *m_shader;
     DepthEstimator *m_depth_estimator;
+    FrameTimeProbe m_ftp_depth_estimation{"Depth estimation total"};
+    FrameTimeProbe m_ftp_test{"test"};
+    std::pair<std::vector<arDepthEstimation::Texture>,std::vector<arDepthEstimation::Texture>> m_stereo_image_pairs{};
+    std::vector<std::string> m_stereo_image_pair_names{};
+    int frame_counter = 0;
+    size_t m_stereo_image_iterator{0};
+    bool m_first{false};
 
   public:
     void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -70,7 +81,56 @@ class MainApplication : public Application
 
         stbi_set_flip_vertically_on_load(true);
 
-        int width, height, channels;
+        std::filesystem::path test_data_path = std::filesystem::current_path();
+        test_data_path /= "assets";
+        test_data_path /= "test_data";
+        const size_t test_data_path_length = test_data_path.string().length() +1;
+
+        
+        m_sampler.initialize_sampler();
+        int i = 0;
+
+        m_stereo_image_pairs.first.reserve(23);
+        m_stereo_image_pairs.second.reserve(23);
+
+
+        for(const auto& entry : std::filesystem::directory_iterator(test_data_path)){
+            m_stereo_image_pair_names.emplace_back(entry.path().string().substr(test_data_path_length));
+            logger_info << "Loading : " << m_stereo_image_pair_names.back();
+            std::filesystem::path left_image_path = entry;
+            left_image_path /= "im0.png";
+            int width, height, channels;
+            std::byte *image_data_left =
+                (std::byte *)stbi_load(left_image_path.string().c_str(), &width, &height, &channels, 4);
+            if (image_data_left == nullptr || channels < 3 || channels > 4)
+            {
+                logger_error << "couldn't load image!";
+                std::runtime_error("couldn't load image!");
+            }
+            
+        
+            
+            std::filesystem::path right_image_path = entry;
+            right_image_path /= "im1.png";
+            std::byte *image_data_right =
+                (std::byte *)stbi_load(right_image_path.string().c_str(), &width, &height, &channels, 4);
+            if (image_data_right == nullptr || channels < 3 || channels > 4)
+            {
+                logger_error << "couldn't load image!";
+                std::runtime_error("couldn't load image!");
+            } 
+            
+            m_stereo_image_pairs.first.emplace_back(static_cast<size_t>(width), static_cast<size_t>(height), GL_RGBA8, GL_UNSIGNED_BYTE, image_data_left, &m_sampler, 0);
+            m_stereo_image_pairs.second.emplace_back(static_cast<size_t>(width), static_cast<size_t>(height), GL_RGBA8, GL_UNSIGNED_BYTE, image_data_right, &m_sampler, 0);
+            stbi_image_free(image_data_left);
+            stbi_image_free(image_data_right);
+            //if(i==1){break;}
+            i++;
+
+        }
+
+
+        /*int width, height, channels;
         std::byte *image_data_left =
             (std::byte *)stbi_load("assets\\test_data\\Adirondack-perfect\\im0.png", &width, &height, &channels, 4);
         if (image_data_left == nullptr || channels < 3 || channels > 4)
@@ -93,17 +153,21 @@ class MainApplication : public Application
         }
         m_texture_right =
             new arDepthEstimation::Texture{static_cast<size_t>(width), static_cast<size_t>(height), GL_RGBA8, GL_UNSIGNED_BYTE, image_data_right, &m_sampler, 0};
-        stbi_image_free(image_data_right);
+        stbi_image_free(image_data_right);*/
+
+        m_texture_left = &(m_stereo_image_pairs.first[0]);
+        m_texture_right = &(m_stereo_image_pairs.second[0]);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_depth_estimator = new DepthEstimator{width, height, false};
+        m_depth_estimator = new DepthEstimator{m_stereo_image_pairs.first[0].get_width(), m_stereo_image_pairs.first[0].get_height(), false};
     }
 
     void draw(int width, int height)
     {
-
-        m_depth_estimator->update_depth_map(m_texture_left->get_texture_id(), m_texture_right->get_texture_id());
+        m_ftp_depth_estimation.start();
+        m_depth_estimator->update_depth_map(m_stereo_image_pairs.first[m_stereo_image_iterator].get_texture_id(), m_stereo_image_pairs.second[m_stereo_image_iterator].get_texture_id());
+        m_ftp_depth_estimation.stop();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, width, height);
@@ -121,6 +185,25 @@ class MainApplication : public Application
         m_sampler.unbind(0);
         // texture_left->unbind();
         glBindVertexArray(0);
+        m_ftp_test.start();
+        m_ftp_test.stop();
+        frame_counter++;
+         if(frame_counter%500==0){
+            if(m_first == true){
+                logger_frametime << m_ftp_depth_estimation.to_csv_line(m_stereo_image_pair_names[m_stereo_image_iterator]); m_ftp_depth_estimation.reset();
+                //logger_frametime << m_depth_estimator->get_ftp_downscale().to_string();m_depth_estimator->get_ftp_downscale().reset();
+                //logger_frametime << m_ftp_test.to_string();m_ftp_test.reset();
+                //logger_frametime << "------------------------------";
+                if(m_stereo_image_iterator >= m_stereo_image_pairs.first.size()-1){
+                    m_context->close_window();
+                    return;
+                }
+                m_stereo_image_iterator++;
+                m_first = false;
+            }else{
+                m_ftp_depth_estimation.reset(); m_first = true;
+            }
+        }
     }
 };
 } // namespace arDepthEstimation

@@ -48,6 +48,10 @@ class ContextManager
         // m_app->key_callback( window, key, scancode, action, mods);
     }
 
+    void close_window(){
+        glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+    }
+
     GLFWwindow *m_window;
     int m_width, m_height;
     FrameTimeProbe m_ftp_glfwFrametime{"GLFW frametime"};
@@ -145,7 +149,7 @@ void run_app(Application *app)
         glViewport(0, 0, m_context->m_width, m_context->m_height);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        //m_context->swap_buffers();
+        m_context->swap_buffers();
     }
     m_context.reset();
 }

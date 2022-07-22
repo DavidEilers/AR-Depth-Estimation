@@ -134,7 +134,7 @@ class MainApplication : public Application
         frame_counter++;
         draw_vr();
         ftp_totalFrameTime.stop();
-        if(frame_counter%1000==0){
+        if(frame_counter%5000==0){
             logger_frametime << ftp_totalFrameTime.to_string(); ftp_totalFrameTime.reset();
             logger_frametime << ftp_gettingCameraFrame.to_string(); ftp_gettingCameraFrame.reset();
             logger_frametime << ftp_depthEstimator.to_string(); ftp_depthEstimator.reset();
