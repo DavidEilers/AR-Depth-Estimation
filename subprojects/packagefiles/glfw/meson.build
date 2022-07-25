@@ -2,7 +2,7 @@ project('glfw', 'c',
     version: '3.3.2',
     license: 'zlib')
 
-cc = meson.get_compiler('c', native:false)
+cc = meson.get_compiler('c', native: false)
 compiler_id = cc.get_id()
 
 math_dep = cc.find_library('m', required: false)

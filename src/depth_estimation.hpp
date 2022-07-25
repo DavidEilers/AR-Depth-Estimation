@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <glad/gl.h>
 
 #include "downscale.hpp"

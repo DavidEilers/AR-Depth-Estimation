@@ -157,7 +157,7 @@ class MainApplication : public Application
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_depth_estimator = new DepthEstimator{m_stereo_image_pairs.first[0].get_width(), m_stereo_image_pairs.first[0].get_height(), false};
+        m_depth_estimator = new DepthEstimator{static_cast<int>(m_stereo_image_pairs.first[0].get_width()), static_cast<int>(m_stereo_image_pairs.first[0].get_height()), false};
     }
 
     void draw(int width, int height)

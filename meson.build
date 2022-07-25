@@ -1,3 +1,6 @@
 project('arDepthEstimation', 'cpp', default_options : ['warning_level=0','cpp_std=c++17'])
-
+#add_global_arguments('-ferror-limit=1', language : 'cpp')
+add_global_arguments('-D_XKEYCHECK_H', language : 'c')
+add_global_arguments('-D_XKEYCHECK_H', language : 'cpp')
+add_global_arguments('-D_CRT_SECURE_NO_WARNINGS', language : 'c')
 subdir('src')

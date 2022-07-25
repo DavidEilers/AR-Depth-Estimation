@@ -22,7 +22,12 @@ endif
   
 cc = meson.get_compiler('cpp', native: false)
 
-openvr_lib = cc.find_library('openvr_api', dirs : meson.current_source_dir()+bin_dir, include_directories: [include_directories('headers')])
+
+if system_info.system() == 'windows'
+  openvr_lib = cc.find_library('openvr_api', dirs : meson.current_source_dir()+lib_dir)
+elif
+  openvr_lib = cc.find_library('openvr_api', dirs : meson.current_source_dir()+lib_bin)
+endif
 openvr_dep = declare_dependency(dependencies: openvr_lib,
                               include_directories:
                                     [include_directories('headers')])

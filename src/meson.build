@@ -12,7 +12,7 @@ dependencies += [openvr_dep]
 if host_machine.system() == 'windows'
  copy_cmd = find_program('test.sh')
  openvr_dll_dir = openvr_proj.get_variable('openvr_bin_dir')
- run_command(copy_cmd,openvr_dll_dir+'/openvr_api.dll',meson.current_build_dir()+'/openvr_api.dll', check: true)
+ #run_command(copy_cmd,openvr_dll_dir+'/openvr_api.dll',meson.current_build_dir()+'/openvr_api.dll', check: true)
 endif
 
 
@@ -49,16 +49,18 @@ tinyobjloader = tinyobjloader_proj.get_variable('tinyobjloader_dep')
 dependencies += [tinyobjloader]
 
 ### Create symlink for assets folder
-copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_build_dir()+'/assets', check: true)
+#copy_output = run_command(copy_cmd,meson.source_root()+'/assets',meson.current_build_dir()+'/assets', check: true)
 
 ##### main program #####
 src = []
 main_src = src + ['main.cpp']
-main_exe = executable('main', main_src, dependencies: [dependencies], link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
+main_exe = executable('main', main_src, dependencies: [dependencies], override_options:['cpp_std=c++17'], link_args:['-static-libgcc', '-static-libstdc++'])
+#
 
 ##### main program #####
 depth_estimation_src = src + ['depth_estimation_test.cpp']
-main_exe = executable('depth_estimation_test', depth_estimation_src, dependencies: [dependencies], link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
+main_exe = executable('depth_estimation_test', depth_estimation_src, dependencies: [dependencies], override_options:['cpp_std=c++17'], link_args:['-static-libgcc', '-static-libstdc++'])
+#link_args:['-static-libgcc', '-static-libstdc++']
 
 ##### testing part #####
 
@@ -70,13 +72,14 @@ gmock_dep = gtest_proj.get_variable('gmock_dep')
 test_dependencies = dependencies + [gtest_dep, gmock_dep]
 
 ### List all test-files in a array and create a seperate Meson test for every test-file
-test_src = src + ['image_test.cpp','init_vr_test.cpp','glfw_test.cpp','texture_test.cpp']
-foreach single_test : test_src
-    temp_exe = executable(single_test.strip('.cpp'),[single_test]+['test_main.cpp'], dependencies:test_dependencies, link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
-    test(single_test.strip('_test.cpp'),temp_exe)
-endforeach
+#test_src = src + ['image_test.cpp','init_vr_test.cpp','glfw_test.cpp','texture_test.cpp']
+#foreach single_test : test_src
+#    temp_exe = executable(single_test.strip('.cpp'),[single_test]+['test_main.cpp'], dependencies:test_dependencies, override_options:['cpp_std=c++17'])
+#    #, link_args:['-static-libgcc', '-static-libstdc++']
+#    test(single_test.strip('_test.cpp'),temp_exe)
+#endforeach
 
 ### Create a Test which includes all other tests
-test_src += 'test_main.cpp'
+#test_src += 'test_main.cpp'
 #test_exe = executable('all_tests',test_src, dependencies:test_dependencies, link_args:['-static-libgcc', '-static-libstdc++'], override_options:['cpp_std=c++17'])
 #test('all_tests', test_exe)

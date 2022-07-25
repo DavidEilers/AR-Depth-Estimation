@@ -276,5 +276,9 @@ glfw_dep = declare_dependency(link_with: glfw_library,
                                      include_directories('.'),
                                      include_directories('../deps')])
 
+glad_library = library('glad','../deps/glad_gl.c', dependencies: dependencies, include_directories:('../deps'))
+
+glad_dep = declare_dependency(link_with: glad_library, include_directories:('../deps'))
+
 
 
