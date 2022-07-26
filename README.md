@@ -2,6 +2,37 @@
 This bachlor project is for creating a depth map for AR applications
 
 ## How to build
+
+## Windows build
+### Requirements
+- clang
+- meson
+- C++ standard library tested with Visual Studio stdlib
+
+### Install
+1. Install git and clone the repository `git clone https://gitlab.hrz.tu-chemnitz.de/daei--tu-chemnitz.de/ardepthestimation.git` or download as archive
+### How to build
+1. For the first build run:
+```
+meson setup builddir
+meson compile -C builddir
+```
+2. For all builds afer this you only need
+```
+meson compile -C buildir
+```
+3. Copy these files into ``builddir/src``
+ 1. ``subprojects/openvr/bin/win64/openvr_api.dll``
+ 2. ``builddir/subprojects/glfw/glad.dll``
+ 3. ``builddir/subprojects/glfw/glfw-3.dll``
+ 4. Optionally  the ``assets`` folder
+
+### How to run
+Run the executable from this directory e.g. ``.\builddir\src\main.exe``.
+If you copied the assets folder you can also run the executable directly from it's folder, but be aware that you need to manually update the assets folder if you update it's contents!
+
+
+## WSL build
 ### Requirements
 - compiler for c++ (tested with MingW64-gcc)
 - meson
@@ -21,15 +52,15 @@ sudo apt install meson clang cmake pkg-config xorg-dev mingw-w64 mingw-w64-tools
 ### How to build
 1. For the first build run:
 ```
-meson builddir --crossfile windows_cross_file.txt
+meson setup builddir --crossfile windows_cross_file.txt
 meson compile -C builddir
 ```
 2. For all builds afer this you only need:
 ```
 meson compile -C buildir
-````
+```
 
-## How to run
+### How to run
 Run the executable from this directory e.g. ``./builddir/src/main.exe``.
 
 - If you run the program directly from the directory be aware that the ``assets`` folder will only be copied on the first creation of ``builddir``.
