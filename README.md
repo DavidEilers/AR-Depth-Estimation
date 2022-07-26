@@ -12,20 +12,14 @@ This bachlor project is for creating a depth map for AR applications
 ### Install
 1. Install git and clone the repository `git clone https://gitlab.hrz.tu-chemnitz.de/daei--tu-chemnitz.de/ardepthestimation.git` or download as archive
 ### How to build
-1. For the first build run:
-```
-meson setup builddir
-meson compile -C builddir
-```
-2. For all builds afer this you only need
-```
-meson compile -C buildir
-```
+1. Setup the build directory  ``meson setup builddir``
+2. Compile the code ``meson compile -C builddir``
+2. For all builds afer this you only run ``meson compile -C buildir``
 3. Copy these files into ``builddir/src``
- 1. ``subprojects/openvr/bin/win64/openvr_api.dll``
- 2. ``builddir/subprojects/glfw/glad.dll``
- 3. ``builddir/subprojects/glfw/glfw-3.dll``
- 4. Optionally  the ``assets`` folder
+    * ``subprojects/openvr/bin/win64/openvr_api.dll``
+    * ``builddir/subprojects/glfw/glad.dll``
+    * ``builddir/subprojects/glfw/glfw-3.dll``
+    * Optionally  the ``assets`` folder
 
 ### How to run
 Run the executable from this directory e.g. ``.\builddir\src\main.exe``.
