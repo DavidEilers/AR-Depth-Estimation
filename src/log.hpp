@@ -2,9 +2,9 @@
 #include <iostream>
 #include <sstream>
 
-//#define ERROR_LOG_ENABLED
-//#define WARN_LOG_ENABLED
-//#define INFO_LOG_ENABLED
+#define ERROR_LOG_ENABLED
+#define WARN_LOG_ENABLED
+#define INFO_LOG_ENABLED
 //#define FRAMETIME_LOG_ENABLED
 
 namespace arDepthEstimation

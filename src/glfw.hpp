@@ -85,7 +85,6 @@ class ContextManager
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         //glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
-//#define DEBUG_GL
 #ifdef DEBUG_GL
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 #endif
@@ -105,13 +104,16 @@ class ContextManager
         logger_info << "GLFW Version: " << glfwGetVersionString();
         logger_info << "OpenGL Version: " << glGetString(GL_VERSION);
         glfwSwapInterval(1);
-
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         ImGui::StyleColorsDark();
         ImGui_ImplGlfw_InitForOpenGL(m_window, true);
         ImGui_ImplOpenGL3_Init("#version 450");
+    
+    #if defined(__GNUC__)
+    logger_info << "__GNUC__ is defined!";
+    #endif
 
     }
 

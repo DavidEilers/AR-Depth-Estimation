@@ -231,8 +231,8 @@ class Vr
         (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[0]), vr::Eye_Left, 0.1, 10);
         (m_pHMD->*get_projection_matrix)(&(ovr_eye_proj[1]), vr::Eye_Right, 0.1, 10);
     #else
-        m_pHMD->GetProjectionMatrix(vr::Eye_Left,0.1,10);
-        m_pHMD->GetProjectionMatrix(vr::Eye_Right,0.1,10);
+        ovr_eye_proj[0] = m_pHMD->GetProjectionMatrix(vr::Eye_Left,0.1,10);
+        ovr_eye_proj[1] = m_pHMD->GetProjectionMatrix(vr::Eye_Right,0.1,10);
     #endif
         //logger_info << "convert to glm mat4";
         glm::mat4 eye_proj[2];

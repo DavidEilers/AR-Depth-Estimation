@@ -74,7 +74,6 @@ class MainApplication : public Application
 
     void setup()
     {
-#define DEBUG_GL
 #ifdef DEBUG_GL
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
